@@ -1,6 +1,14 @@
 import datetime
+
+from matplotlib.pyplot import *
 from tkinter import *
 from tkinter import ttk
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+matplotlib.use("TkAgg")
+
+
 
 # Инициализация окна
 main_window = Tk()
@@ -42,24 +50,23 @@ def RenderBottom():
 
 # визуализация графика
 def RenderGraph():
-    canv = Canvas(graphFrame, width=graphWidth, height=graphHeight, bg="#FFFFFF")
-    canv.place(relx=.5, rely=.5, anchor="center")
+    value = [1, 5, 2, 3, 4, 4, 8, 2]
 
-    # Оси координат
-    canv.create_line(graphWidth / 2, graphHeight, graphWidth / 2, 0, width=graphLineWidth, arrow=LAST)
-    canv.create_line(0, graphHeight / 2, graphWidth, graphHeight / 2, width=graphLineWidth, arrow=LAST)
+    figure = Figure(figsize=(10, 4), dpi=100, facecolor="#45C4B0")
+    plot = figure.add_subplot(1, 1, 1)
 
-    # Просчет графика
-    for i in range(valuesNumber - 1):
-        firstValue = graphValues[i].get()
-        secondValue = graphValues[i + 1].get()
+    canv = FigureCanvasTkAgg(figure, main_window)
+    canv.get_tk_widget().grid(row=0, column=0)
 
-        if (firstValue != '' and secondValue != ''):
-            canv.create_text(graphWidth / valuesNumber * i, graphHeight / 2 + 20, text="13 April", fill="#45C4B0",
-                             font=("Helvectica", "10"))
-            canv.create_line(graphWidth / valuesNumber * i, graphHeight / 2 - int(firstValue),
-                             graphWidth / valuesNumber * (i + 1), graphHeight / 2 - int(secondValue),
-                             width=graphLineWidth)
+    x = [1, 2, 3]
+    y = [1, 4, 9]
+    # trend_line = [
+
+    plot.plot(x, y, color="#45C4B0", marker=".", linestyle="-")
+    # plot.grid()
+
+    # for i in range(5):
+    # plot.plot(i, value[i], color="#C41E3A", marker="o", linestyle="-")
 
 
 def click_date_button(value):
@@ -169,7 +176,6 @@ def ClickAddValue():
 
 
 # рамки, сейчас они просто в оперативке
-notesFrame = Frame(main_window, background='#45C4B0')
 graphFrame = Frame(main_window, background='#FFFFFF')
 valuesFrame = Frame(main_window, background='#DAFDBA')
 
@@ -188,8 +194,7 @@ def AddValue():
 # pack()-установка по пикселям
 # grid()-установка на таблице
 # place()-установка по координатам
-notesFrame.grid(row=0, column=0, sticky="nsew")
-graphFrame.grid(row=0, column=1, sticky="nsew")
+graphFrame.grid(row=0, column=0, columnspan=2, sticky="nsew")
 valuesFrame.grid(row=1, column=0, columnspan=2, sticky="nsew")
 
 RenderBottom()
