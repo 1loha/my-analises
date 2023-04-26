@@ -46,50 +46,66 @@ def RenderBottom():
         valueLabel.grid(row=0, column=i, sticky="w", padx=10, pady=10)
         graphValues[i].grid(row=1, column=i, sticky="e", padx=10, pady=10)
 
-    # Button(valuesFrame, text="Render Graph", command=RenderGraph).grid()
+    # Button(valuesFrame, "Render Graph", RenderGraph).grid()
 
+def choose_date(clicks):
+
+    return [7, 10, 20]
+
+def on_button_click():
+    print('Button clicked')
+
+def create_buttons(figure):
+    coordinates = [[0 for j in range(4)] for h in range(4)]
+    button_ax = [0 for p in range(4)]
+    button = [0 for q in range(4)]
+    x, y, w, h = 0.91, 0.18, 0.08, 0.1
+
+    # кнопки для смены периода
+    for butt in range(4):
+        coordinates[butt] = [x, y*(butt+1), w, h]
+
+    times = ['anywhere', 'year', 'month', 'week']
+
+    for i in range(len(coordinates)):
+        button_ax[i] = figure.add_axes(coordinates[i])
+        button[i] = Button(button_ax[i], times[i])
+
+    # button[0].on_clicked(on_button_click)
+    return button
 
 # визуализация графика
 def RenderGraph():
-    value_y = np.array([15, 19, 13, 11, 14, 8, 6])
-    value_x = np.array([1, 2, 3, 4, 5, 6, 7])
-    # for i in range(0, len(value)):
-    #     sum_time = (1 + 7) * len(days) / 2
-    #     sr_x = sum_time / 7
-    #     sr_xx = sr_x ** 2
-    #
-    #     sum_y = sum(value)
-    #     sr_y = sum_y / len(value)
-    #
-    #     for j in range(0, len(value)):
-    #         sum_xx += value[j] ** 2
-    #         sum_xy += value[j] * j+1
-    #
-    #     b = (sum_xy - len(value) * sr_x * sr_y) / (sum_xx - len(value) * sr_xx)
-    #     a = sr_y - b * sr_x
-    #
-    #     res = a + b * (i + 1)
-    #     trend_line.append(res)
-
     figure = Figure(figsize=(15, 1), dpi=130, facecolor="#45C4B0")
     ax = figure.add_subplot(1, 1, 1)
     ax.grid()
 
+    # аля считывание с бд
+    cost = np.array([15, 19, 13, 11, 14, 8, 6])
+    days = np.array([1, 2, 3, 4, 5, 6, 7])
+
     # $(t)
-    ax.plot(value_x, value_y, label='cost', color="#45C4B0", marker=".", linestyle="-")
+    ax.plot(days, cost, label='cost', color="#45C4B0", marker=".", linestyle="-")
 
     # trend line
-    z = np.polyfit(value_x, value_y, 1)
+    z = np.polyfit(days, cost, 1)
     p = np.poly1d(z)
-    ax.plot(value_x, p(value_x), label='trend line', color="y", linestyle=":")
+    ax.plot(days, p(days), label='trend line', color="y", linestyle=":")
+
+    # lines name
+    ax.legend(loc='lower center')
 
 
-    ax.legend(loc = 'lower center')
+    clicks = create_buttons(figure)
 
-    #
+
+
     # количество отметок на осях
-    # plot.yaxis.set_major_locator(LinearLocator(5))
-    # plot.set_yscale('symlog', linthresh=10)
+    choose = choose_date(clicks)
+
+    ax.yaxis.set_major_locator(LinearLocator(5))
+    ax.xaxis.set_major_locator(LinearLocator(10))
+
     canv = FigureCanvasTkAgg(figure, main_window)
     canv.get_tk_widget().grid(row=0, column=0, sticky='nsew')
 
@@ -220,11 +236,11 @@ def AddValue():
 
 
 # фиксируем их на плоскость с помощью упаковщиков
-graphFrame.grid(row=0, column=0, columnspan=2, sticky="nsew")
+# graphFrame.grid(row=0, column=0, columnspan=2, sticky="nsew")
 valuesFrame.grid(row=1, column=0, columnspan=2, sticky="nsew")
 
 RenderBottom()
 RenderGraph()
-Button(valuesFrame, text="+", command=AddValue).grid(column=37, row=40)
+# Button(valuesFrame, "+", AddValue).grid(column=37, row=40)
 
 main_window.mainloop()
