@@ -1,6 +1,7 @@
 import datetime
 import os
 from tkinter import *
+<<<<<<< HEAD
 from tkinter import ttk
 
 from SQLData import SQLDataBase
@@ -10,6 +11,14 @@ from matplotlib.pyplot import *
 #
 path = os.getcwd() + r"\tables.db"
 conn = SQLDataBase(path)
+=======
+# from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from tkcalendar import Calendar
+
+# matplotlib.use("TkAgg")
+
+>>>>>>> b96a6692629f3c66174ed9969e49f31c1fa3451e
 
 # Инициализация окна
 main_window = Tk()
@@ -23,29 +32,85 @@ main_window.columnconfigure(1, weight=1)
 main_window.rowconfigure(1, weight=1)
 
 # Настройки
-graphWidth = 640
-graphHeight = 240
-graphLineWidth = 2
+graph_width = 640
+graph_height = 240
+graph_line_width = 2
 
 # Глобальные переменные
-graphValues = []
-valuesNumber = 1
+сategories = []
+plus_inputs = []
+minus_inputs = []
+current_date = datetime.datetime.today()
 
-buttonsArray = []
-date = "1"
-month_value = "January"
+# рамки, сейчас они просто в оперативке
+graph_frame = Frame(main_window, background='#FFFFFF')
+bottom_frame = Frame(main_window, background='#DAFDBA')
+
+# Настройка строк и столбцов в нижней половине
+for i in range(4):
+    bottom_frame.rowconfigure(i, weight=1)
+for i in range(6):
+    bottom_frame.columnconfigure(i, weight=1)
+
+# фиксируем их на плоскость с помощью упаковщиков
+graph_frame.grid(row=0, column=0, columnspan=2, sticky="nsew")
+bottom_frame.grid(row=1, column=0, columnspan=2, sticky="nsew")
 
 
 # дизайн нижней части окна
 def RenderBottom():
-    today = datetime.datetime.today()
+    Button(bottom_frame, text="<---", command=lambda: ChangeCurDate(days=-1)).grid(row=0, column=1)
+    Label(bottom_frame, text=current_date.strftime("%d %B %Y")).grid(row=0, column=2)
+    Button(bottom_frame, text="Render Graph", command=RenderGraph).grid(row=0, column=3)
+    Button(bottom_frame, text="Выбрать дату", command=OpenCalendar).grid(row=0, column=4)
+    Button(bottom_frame, text="--->", command=lambda: ChangeCurDate(days=1)).grid(row=0, column=5)
+
+    Label(bottom_frame, text="Категории").grid(row=1, column=0)
+    Label(bottom_frame, text="Доход").grid(row=2, column=0)
+    Label(bottom_frame, text="Расход").grid(row=3, column=0)
+
     for i in range(5):
-        valueLabel = Label(valuesFrame, text=(today + datetime.timedelta(days=i)).strftime("%d %B"))
-        graphValues.append(Entry(valuesFrame))
+        сategories.append(Entry(bottom_frame))
+        сategories[i].grid(row=1, column=i + 1)
 
-        valueLabel.grid(row=0, column=i, sticky="w", padx=10, pady=10)
-        graphValues[i].grid(row=1, column=i, sticky="e", padx=10, pady=10)
+        plus_inputs.append(Entry(bottom_frame))
+        plus_inputs[i].grid(row=2, column=i + 1)
 
+        minus_inputs.append(Entry(bottom_frame))
+        minus_inputs[i].grid(row=3, column=i + 1)
+
+
+def OpenCalendar():
+    global calendar_window
+    calendar_window = Toplevel()
+    calendar_window.grab_set()
+    calendar_window.title("Input date")
+    calendar_window.geometry("300x300")
+    calendar_window.resizable(False, False)
+    global calendar
+    calendar = Calendar(calendar_window, selectmode='day',
+                        year=current_date.year, month=current_date.month,
+                        day=current_date.day)
+    calendar.pack(pady=20)
+
+    Button(calendar_window, text="Ok",
+           command=SelectDate).pack(pady=20)
+
+
+def SelectDate():
+    global current_date
+    global calendar_window
+    current_date = datetime.datetime.strptime(calendar.get_date(), '%m/%d/%y')
+    calendar_window.destroy()
+    RenderBottom()
+
+
+def ChangeCurDate(days=0):
+    global current_date
+    current_date += datetime.timedelta(days=days)
+    RenderBottom()
+
+<<<<<<< HEAD
     # Button(valuesFrame, "Render Graph", RenderGraph).grid()
 
 def choose_date(clicks):
@@ -73,6 +138,12 @@ def create_buttons(figure):
 
     # button[0].on_clicked(on_button_click)
     return button
+=======
+
+def cm_to_inch(value):
+    return value / 2.54
+
+>>>>>>> b96a6692629f3c66174ed9969e49f31c1fa3451e
 
 # визуализация графика
 def RenderGraph():
@@ -92,16 +163,28 @@ def RenderGraph():
     p = np.poly1d(z)
     ax.plot(days, p(days), label='trend line', color="y", linestyle=":")
 
+<<<<<<< HEAD
     # lines name
     ax.legend(loc='lower center')
+=======
+    for i in range(0, len(value)):
+        sum_xx += value[i] ** 2
+        sum_xy += value[i] * i + 1
+>>>>>>> b96a6692629f3c66174ed9969e49f31c1fa3451e
 
 
     clicks = create_buttons(figure)
 
+<<<<<<< HEAD
 
 
     # количество отметок на осях
     choose = choose_date(clicks)
+=======
+    figure = Figure(figsize=(cm_to_inch(25), cm_to_inch(4)), dpi=130, facecolor="#45C4B0")
+    plot = figure.add_subplot(1, 1, 1)
+    plot.grid()
+>>>>>>> b96a6692629f3c66174ed9969e49f31c1fa3451e
 
     ax.yaxis.set_major_locator(LinearLocator(5))
     ax.xaxis.set_major_locator(LinearLocator(10))
@@ -110,6 +193,7 @@ def RenderGraph():
     canv.get_tk_widget().grid(row=0, column=0, sticky='nsew')
 
 
+<<<<<<< HEAD
 
 
 
@@ -242,5 +326,9 @@ valuesFrame.grid(row=1, column=0, columnspan=2, sticky="nsew")
 RenderBottom()
 RenderGraph()
 # Button(valuesFrame, "+", AddValue).grid(column=37, row=40)
+=======
+RenderBottom()
+RenderGraph()
+>>>>>>> b96a6692629f3c66174ed9969e49f31c1fa3451e
 
 main_window.mainloop()
