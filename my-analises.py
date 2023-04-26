@@ -1,14 +1,15 @@
 import datetime
-
-from matplotlib.pyplot import *
+import os
 from tkinter import *
 from tkinter import ttk
-# from matplotlib.figure import Figure
+
+from SQLData import SQLDataBase
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.pyplot import *
 
-# matplotlib.use("TkAgg")
-
-
+#
+path = os.getcwd() + r"\tables.db"
+conn = SQLDataBase(path)
 
 # Инициализация окна
 main_window = Tk()
@@ -45,44 +46,50 @@ def RenderBottom():
         valueLabel.grid(row=0, column=i, sticky="w", padx=10, pady=10)
         graphValues[i].grid(row=1, column=i, sticky="e", padx=10, pady=10)
 
-    Button(valuesFrame, text="Render Graph", command=RenderGraph).grid()
+    # Button(valuesFrame, text="Render Graph", command=RenderGraph).grid()
 
-def cm_to_inch(value):
-    return value/2.54
 
 # визуализация графика
 def RenderGraph():
-    value = [4, 5, 2, 6, 8, 2, 1]
-    days = ['mon', 'tue', 'wed', 'thur', 'frid', 'sut', 'sun']
+    value_y = np.array([15, 19, 13, 11, 14, 8, 6])
+    value_x = np.array([1, 2, 3, 4, 5, 6, 7])
+    # for i in range(0, len(value)):
+    #     sum_time = (1 + 7) * len(days) / 2
+    #     sr_x = sum_time / 7
+    #     sr_xx = sr_x ** 2
+    #
+    #     sum_y = sum(value)
+    #     sr_y = sum_y / len(value)
+    #
+    #     for j in range(0, len(value)):
+    #         sum_xx += value[j] ** 2
+    #         sum_xy += value[j] * j+1
+    #
+    #     b = (sum_xy - len(value) * sr_x * sr_y) / (sum_xx - len(value) * sr_xx)
+    #     a = sr_y - b * sr_x
+    #
+    #     res = a + b * (i + 1)
+    #     trend_line.append(res)
 
-    sum_x = (1 + 7) * len(days) / 2
-    sr_x = sum_x / 7
-    sr_xx = sr_x ** 2
+    figure = Figure(figsize=(15, 1), dpi=130, facecolor="#45C4B0")
+    ax = figure.add_subplot(1, 1, 1)
+    ax.grid()
 
-    sum_y = sum(value)
-    sr_y = sum_y / len(value)
+    # $(t)
+    ax.plot(value_x, value_y, label='cost', color="#45C4B0", marker=".", linestyle="-")
 
-    sum_xy, sum_xx = 0, 0
-    trend_line = []
-
-    for i in range(0, len(value)):
-        sum_xx += value[i] ** 2
-        sum_xy += value[i] * i+1
-
-    b = (sum_xy - len(value) * sr_x * sr_y) / (sum_xx - len(value) * sr_xx)
-    a = sr_y - b * sr_x
-    for i in range(0, len(value)):
-        trend_line.append(a + b * (i + 1))
+    # trend line
+    z = np.polyfit(value_x, value_y, 1)
+    p = np.poly1d(z)
+    ax.plot(value_x, p(value_x), label='trend line', color="y", linestyle=":")
 
 
+    ax.legend(loc = 'lower center')
 
-    figure = Figure(figsize=(cm_to_inch(25), cm_to_inch(4)), dpi=130, facecolor="#45C4B0")
-    plot = figure.add_subplot(1, 1, 1)
-    plot.grid()
-
-    plot.plot(days, value, color="#45C4B0", marker=".", linestyle="-")
-    plot.plot(trend_line, color="y", marker="o", linestyle=":")
-
+    #
+    # количество отметок на осях
+    # plot.yaxis.set_major_locator(LinearLocator(5))
+    # plot.set_yscale('symlog', linthresh=10)
     canv = FigureCanvasTkAgg(figure, main_window)
     canv.get_tk_widget().grid(row=0, column=0, sticky='nsew')
 
