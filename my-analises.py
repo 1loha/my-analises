@@ -7,6 +7,7 @@ from SQLData import SQLDataBase
 from tkcalendar import Calendar
 from matplotlib.widgets import RadioButtons
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from calendar import monthrange
 
 path = os.getcwd() + r"\tables.db"
 conn = SQLDataBase(path)
@@ -38,6 +39,8 @@ class Aplication:
         self.radio_buttons = None
         self.priceLine = None
         self.timeLine = None
+        self.selected_period = 'week'
+        self.data_base = {}
 
         self.categories = []
         self.names_categories = []
@@ -51,6 +54,7 @@ class Aplication:
             self.bottom_frame.rowconfigure(i, weight=1)
         for i in range(6):
             self.bottom_frame.columnconfigure(i, weight=1)
+
 
     # дизайн нижней части окна
     def RenderBottom(self):
@@ -68,10 +72,14 @@ class Aplication:
             self.categories.append(Entry(self.bottom_frame))
             self.categories[i].grid(row=1, column=i + 1)
 
-            self.plus_inputs.append(Entry(self.bottom_frame))
+            plus_sv = StringVar()
+            plus_sv.trace("w", lambda name, index, mode, sv=plus_sv: self.OnValueChanged())
+            self.plus_inputs.append(Entry(self.bottom_frame, textvariable=plus_sv))
             self.plus_inputs[i].grid(row=2, column=i + 1)
 
-            self.minus_inputs.append(Entry(self.bottom_frame))
+            minus_sv = StringVar()
+            minus_sv.trace("w", lambda name, index, mode, sv=minus_sv: self.OnValueChanged())
+            self.minus_inputs.append(Entry(self.bottom_frame, textvariable=minus_sv))
             self.minus_inputs[i].grid(row=3, column=i + 1)
 
     def OpenCalendar(self):
@@ -83,10 +91,10 @@ class Aplication:
         self.calendar_window.resizable(False, False)
         global calendar
         self.calendar = Calendar(self.calendar_window,
-                            selectmode='day',
-                            year=self.current_date.year,
-                            month=self.current_date.month,
-                            day=self.current_date.day)
+                                 selectmode='day',
+                                 year=self.current_date.year,
+                                 month=self.current_date.month,
+                                 day=self.current_date.day)
         self.calendar.pack(pady=20)
 
         Button(self.calendar_window, text="Ok", command=self.SelectDate).pack(pady=20)
@@ -101,7 +109,36 @@ class Aplication:
     def ChangeCurDate(self, days=0):
         global current_date
         self.current_date += datetime.timedelta(days=days)
+        for p_i in self.plus_inputs:
+            p_i.delete(0, END)
+        for m_i in self.minus_inputs:
+            m_i.delete(0, END)
         self.RenderBottom()
+
+    def OnValueChanged(self):
+        value = 0
+        for p_i in self.plus_inputs:
+            try:
+                value += int(p_i.get())
+            except ValueError:
+                print("Не число")
+
+        for p_m in self.minus_inputs:
+            try:
+                value -= int(p_m.get())
+            except ValueError:
+                print("Не число")
+
+        if (self.current_date.strftime("%d %B %Y") in self.data_base.keys()):
+            print("В базу данных добавлено значение " + str(value) + " для даты " + self.current_date.strftime(
+                "%d %B %Y"))
+            self.data_base[self.current_date.strftime("%d %B %Y")] = value
+        else:
+            self.data_base.update({self.current_date.strftime("%d %B %Y"): value})
+            print(
+                "В базу данных изменено значение " + str(value) + " для даты " + self.current_date.strftime("%d %B %Y"))
+
+        self.selected_button(self.selected_period)
 
     def selected_button(self, label):
         i_dict = {
@@ -111,10 +148,11 @@ class Aplication:
             "all time": 3
         }
         i = i_dict.get(label, 0)
+        self.selected_period = label
         self.render_lines(i)
         self.canvas.draw()
 
-    def render_lines(self, i):
+    def render_lines(self, selected_period):
         self.ax.clear()
         self.ax.grid()
         self.priceLine = []
@@ -122,58 +160,44 @@ class Aplication:
         self.length = []
         maxMarks = None
 
-        if i == 0:  # week
+        if selected_period == 0:  # week
             maxMarks = 7
-
-            for p_i in self.plus_inputs:  # values on price axis
-                self.priceLine = mp.np.append(self.priceLine, int(p_i.get()))
+            start = self.current_date - datetime.timedelta(days=self.current_date.weekday())  # Начинаем с понедельника
             self.timeLine = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+            for i in range(maxMarks):
+                self.priceLine = mp.np.append(self.priceLine,
+                                              self.data_base.get(
+                                                  (start + datetime.timedelta(days=i)).strftime("%d %B %Y"),
+                                                  0))
 
-        elif i == 1:  # month
-            maxMarks = 10
-
-            for p_i in self.plus_inputs:  # values on price axis
-                self.priceLine = mp.np.append(self.priceLine, int(p_i.get()))
-            self.timeLine = ['first week', 'second week', 'third week', 'last week']
-
-        elif i == 2:  # year
+        elif selected_period == 1:  # month
+            maxMarks = monthrange(self.current_date.year, self.current_date.month)[1] # сколько дней в месяце
+            start = datetime.datetime(self.current_date.year, self.current_date.month, 1)  # Начинаем с 1 числа
+            self.timeLine = [str(i) for i in range(maxMarks)]
+            for i in range(maxMarks):
+                self.priceLine = mp.np.append(self.priceLine,
+                                              self.data_base.get(
+                                                  (start + datetime.timedelta(days=i)).strftime("%d %B %Y"),
+                                                  0))
+        elif selected_period == 2:  # year
             maxMarks = 12
-
-            for p_i in self.plus_inputs:  # values on price axis
-                self.priceLine = mp.np.append(self.priceLine, int(p_i.get()))
             self.timeLine = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec']
-
-        elif i == 3:  # all time
+        elif selected_period == 3:  # all time
             maxMarks = 15
-
-            for p_i in self.plus_inputs:  # values on price axis
-                self.priceLine = mp.np.append(self.priceLine, int(p_i.get()))
             self.timeLine = ['first quarter', 'second quarter', 'third quarter', 'last quarter']
 
         lenX = len(self.priceLine)
         lenY = len(self.timeLine)
-        # newPriceLine = [0]*lenY
-        # indexStep = lenX // lenY
-        # out = 0
+
+        if lenX < 2:
+            return
 
         # must not be more than maxMarks
         if lenX >= lenY:
-            newIndexes = mp.np.linspace(0, lenX - 1, lenY)
-
-            # Вычисляем новый массив с использованием пропорциональной интерполяции
-            newPriceLine = mp.np.interp(newIndexes, mp.np.arange(lenX), self.priceLine)
-
-            # newPriceLine = mp.np.round(newPriceLine, 0)
-            # print(newPriceLine)
-            # print(sum(newPriceLine))
-
-            # Масштабируем новый массив, чтобы сохранить сумму
-            newPriceLine *= self.priceLine.sum() / newPriceLine.sum()
-
-            # newPriceLine = mp.np.round(newPriceLine, 0)
-            # print(newPriceLine)
-            # print(sum(newPriceLine))
-
+            newIndexes = mp.np.linspace(0, lenX - 1, lenY)  # equal location of elements
+            newPriceLine = mp.np.interp(newIndexes, mp.np.arange(lenX), self.priceLine)  # proportional interpolation
+            newPriceLine *= self.priceLine.sum() / newPriceLine.sum()  # to return the lost value
+            newPriceLine = mp.np.round(newPriceLine, 0)
             self.priceLine = newPriceLine  # copy a new array in priceLine
         else:
             self.timeLine = []
@@ -185,9 +209,6 @@ class Aplication:
         for j in range(len(self.priceLine)):
             self.length = mp.np.append(self.length, j)
 
-        print(type(self.length), " - ", self.length)
-        print(type(self.priceLine), " - ", self.priceLine)
-        print(type(self.timeLine), " - ", self.timeLine)
         # maybe these string should be below
         z = mp.np.polyfit(self.length, self.priceLine, 1)
         p = mp.np.poly1d(z)
