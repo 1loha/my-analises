@@ -39,15 +39,12 @@ class Aplication:
         self.priceLine = None
         self.timeLine = None
 
-        # Настройки
-        # self.graphWidth = 640
-        # self.graphHeight = 240
-        # self.graphLineWidth = 2
-
-        # Глобальные переменные
         self.categories = []
+        self.names_categories = []
+
         self.plus_inputs = []
         self.minus_inputs = []
+
         self.current_date = datetime.datetime.today()
 
         for i in range(4):
@@ -55,16 +52,12 @@ class Aplication:
         for i in range(6):
             self.bottom_frame.columnconfigure(i, weight=1)
 
-
-
-
-
-    # # дизайн нижней части окна
+    # дизайн нижней части окна
     def RenderBottom(self):
         Button(self.bottom_frame, text="<---", command=lambda: self.ChangeCurDate(days=-1)).grid(row=0, column=1)
         Label(self.bottom_frame, text=self.current_date.strftime("%d %B %Y")).grid(row=0, column=2)
         # Button(bottom_frame, text="Render Graph", command=RenderGraph).grid(row=0, column=3)
-        Button(self.bottom_frame, text="Выбрать дату", command= self.OpenCalendar).grid(row=0, column=4)
+        Button(self.bottom_frame, text="Выбрать дату", command=self.OpenCalendar).grid(row=0, column=4)
         Button(self.bottom_frame, text="--->", command=lambda: self.ChangeCurDate(days=1)).grid(row=0, column=5)
 
         Label(self.bottom_frame, text="Категории").grid(row=1, column=0)
@@ -110,28 +103,7 @@ class Aplication:
         self.current_date += datetime.timedelta(days=days)
         self.RenderBottom()
 
-    # def create_buttons(self, figure):
-    #     coordinates = [[0 for j in range(4)] for h in range(4)]
-    #     button_ax = [0 for p in range(4)]
-    #     button = [0 for q in range(4)]
-    #     x, y, w, h = 0.91, 0.18, 0.08, 0.1
-    #
-    #     # кнопки для смены периода
-    #     for butt in range(4):
-    #         coordinates[butt] = [x, y * (butt + 1), w, h]
-    #
-    #     times = ['anywhere', 'year', 'month', 'week']
-    #
-    #     for i in range(len(coordinates)):
-    #         button_ax[i] = figure.add_axes(coordinates[i])
-    #         button[i] = mp.Button(button_ax[i], times[i])
-    #
-    #     # button[0].on_clicked(on_button_click)
-    #
-    #     return button
-
     def selected_button(self, label):
-        print(f"Selected value: {label}")
         i_dict = {
             "week": 0,
             "month": 1,
@@ -145,100 +117,98 @@ class Aplication:
     def render_lines(self, i):
         self.ax.clear()
         self.ax.grid()
+        self.priceLine = []
         self.timeLine = []
         self.length = []
+        maxMarks = None
 
         if i == 0:  # week
             maxMarks = 7
-            self.priceLine = mp.np.array([7, 12, 2, 8, 13, 20, 21])  # values on price axis
-            self.timeLine = ['Monday', 'Tuesday', 'Wednesday', 'Thursday',
-                             'Friday', 'Saturday', 'Sunday']  # values on the time axis
 
-            if len(self.priceLine) >= len(self.timeLine):
-                self.priceLine = self.priceLine[:len(self.timeLine)]
-            else:
-                self.timeLine = []
-                for k in range(1, len(self.priceLine) + 1):  # length of timeline selected dynamically
-                    self.timeLine = mp.np.append(self.timeLine, f'{k}/{len(self.priceLine)}')
-
-            for j in range(len(self.priceLine)):  # for trend line
-                self.length = mp.np.append(self.length, j)
-
-            self.ax.yaxis.set_major_locator(mp.MaxNLocator(maxMarks))  # max number of marks on axis
-            self.ax.xaxis.set_major_locator(mp.MaxNLocator(len(self.priceLine)))
+            for p_i in self.plus_inputs:  # values on price axis
+                self.priceLine = mp.np.append(self.priceLine, int(p_i.get()))
+            self.timeLine = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
         elif i == 1:  # month
             maxMarks = 10
-            self.priceLine = mp.np.array([1, 15, 28, 30, 31])
+
+            for p_i in self.plus_inputs:  # values on price axis
+                self.priceLine = mp.np.append(self.priceLine, int(p_i.get()))
             self.timeLine = ['first week', 'second week', 'third week', 'last week']
-
-            if len(self.priceLine) >= len(self.timeLine):
-                self.priceLine = self.priceLine[:len(self.timeLine)]
-            else:
-                self.timeLine = []
-                for k in range(1, len(self.priceLine) + 1):  # length of timeline selected dynamically
-                    self.timeLine = mp.np.append(self.timeLine, f'{k}/{len(self.priceLine)}')
-
-            for j in range(len(self.priceLine)):
-                self.length = mp.np.append(self.length, j)
-
-            self.ax.yaxis.set_major_locator(mp.MaxNLocator(maxMarks))
-            self.ax.xaxis.set_major_locator(mp.MaxNLocator(len(self.priceLine)))
 
         elif i == 2:  # year
             maxMarks = 12
-            self.priceLine = mp.np.array([200, 500, 300, 320, 400])
-            self.timeLine = ['jan', 'feb', 'mar', 'apr', 'jun', 'jul', 'aug', 'sep', 'nov', 'dec']
 
-            if len(self.priceLine) >= len(self.timeLine):
-                self.priceLine = self.priceLine[:maxMarks]
-            else:
-                self.timeLine = []
-                for k in range(1, len(self.priceLine) + 1):  # length of timeline selected dynamically
-                    self.timeLine = mp.np.append(self.timeLine, f'{k}/{len(self.priceLine)}')
-
-            for j in range(len(self.priceLine)):
-                self.length = mp.np.append(self.length, j)
-
-            self.ax.yaxis.set_major_locator(mp.MaxNLocator(maxMarks))
-            self.ax.xaxis.set_major_locator(mp.MaxNLocator(len(self.priceLine)))
+            for p_i in self.plus_inputs:  # values on price axis
+                self.priceLine = mp.np.append(self.priceLine, int(p_i.get()))
+            self.timeLine = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec']
 
         elif i == 3:  # all time
             maxMarks = 15
-            self.priceLine = mp.np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17])
 
-            if len(self.priceLine) > maxMarks:  # will not be more than maxMarks
-                self.priceLine = self.priceLine[:maxMarks]
+            for p_i in self.plus_inputs:  # values on price axis
+                self.priceLine = mp.np.append(self.priceLine, int(p_i.get()))
+            self.timeLine = ['first quarter', 'second quarter', 'third quarter', 'last quarter']
 
-            for k in range(1, len(self.priceLine) + 1):  # length of timeline selected dynamically
-                self.timeLine = mp.np.append(self.timeLine, f'{k}/{len(self.priceLine)}')
+        lenX = len(self.priceLine)
+        lenY = len(self.timeLine)
+        # newPriceLine = [0]*lenY
+        # indexStep = lenX // lenY
+        # out = 0
 
-            for j in range(len(self.priceLine)):
-                self.length = mp.np.append(self.length, j)
+        # must not be more than maxMarks
+        if lenX >= lenY:
+            newIndexes = mp.np.linspace(0, lenX - 1, lenY)
 
-            self.ax.yaxis.set_major_locator(mp.MaxNLocator(maxMarks))
-            self.ax.xaxis.set_major_locator(mp.MaxNLocator(len(self.priceLine)))
+            # Вычисляем новый массив с использованием пропорциональной интерполяции
+            newPriceLine = mp.np.interp(newIndexes, mp.np.arange(lenX), self.priceLine)
 
-        # z = mp.np.polyfit(self.length, self.priceLine, 1)
-        # p = mp.np.poly1d(z)
+            # newPriceLine = mp.np.round(newPriceLine, 0)
+            # print(newPriceLine)
+            # print(sum(newPriceLine))
 
-        if len(self.priceLine) > len(self.timeLine):
-            self.priceLine = self.priceLine[:len(self.timeLine)]
+            # Масштабируем новый массив, чтобы сохранить сумму
+            newPriceLine *= self.priceLine.sum() / newPriceLine.sum()
+
+            # newPriceLine = mp.np.round(newPriceLine, 0)
+            # print(newPriceLine)
+            # print(sum(newPriceLine))
+
+            self.priceLine = newPriceLine  # copy a new array in priceLine
+        else:
+            self.timeLine = []
+            for k in range(1, lenX + 1):  # length of timeline selected dynamically
+                self.timeLine = mp.np.append(self.timeLine, f'{k}/{lenX}')
+            self.ax.xaxis.set_major_locator(mp.MaxNLocator(lenX))
+        self.ax.yaxis.set_major_locator(mp.MaxNLocator(maxMarks))
+
+        for j in range(len(self.priceLine)):
+            self.length = mp.np.append(self.length, j)
+
+        print(type(self.length), " - ", self.length)
+        print(type(self.priceLine), " - ", self.priceLine)
+        print(type(self.timeLine), " - ", self.timeLine)
+        # maybe these string should be below
+        z = mp.np.polyfit(self.length, self.priceLine, 1)
+        p = mp.np.poly1d(z)
+
+        if lenX > lenY:
+            pass  # self.priceLine = self.priceLine[:lenY]
         else:
             # self.priceLine = mp.np.append(self.priceLine, [None] * (len(self.timeLine) - len(self.priceLine)))
-            self.timeLine = self.timeLine[:len(self.priceLine)]
+            self.timeLine = self.timeLine[:lenX]
 
         # Removes duplicate legends
         if self.executed:
             self.ax.plot(self.timeLine, self.priceLine, label='cost', color="#45C4B0", marker=".", linestyle="-")
-            # self.ax.plot(self.timeLine, p(self.length), label='trend line', color="y", linestyle=":")
+            self.ax.plot(self.timeLine, p(self.length), label='trend line', color="y", linestyle=":")
             self.ax.legend(loc='lower center')
             self.executed = False
             return
 
         # $(t) and trend line
         self.ax.plot(self.timeLine, self.priceLine, color="#45C4B0", marker=".", linestyle="-")
-        # self.ax.plot(self.timeLine, p(self.length), color="y", linestyle=":")
+        self.ax.plot(self.timeLine, p(self.length), color="y", linestyle=":")
 
     # визуализация графика
     def RenderGraph(self):
