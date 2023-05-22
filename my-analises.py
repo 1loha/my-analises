@@ -85,20 +85,30 @@ class Aplication:
 
     def OpenCategoriesWindow(self):
         global categories_window
+        global categories_frame
+        global categories_canvas
         self.categories_window = Toplevel()
         # self.categories_window.grab_set()
         self.categories_window.title("Выбор категории")
-        self.categories_window.geometry("400x500")
+        self.categories_window.geometry("300x300")
         self.categories_window.resizable(False, False)
 
-        scrollbar = Scrollbar(self.categories_window, orient="vertical")
+        categories_canvas = Canvas(self.categories_window, borderwidth=0, background="#ffffff")
+        categories_frame = Frame(categories_canvas, background="#ffffff")
+        scrollbar = Scrollbar(self.categories_window, orient="vertical", command=categories_canvas.yview)
+        categories_canvas.configure(yscrollcommand=scrollbar.set)
         scrollbar.pack(side="right", fill="y")
+        categories_canvas.pack(side="left", fill="both", expand=True)
+        categories_canvas.create_window((4, 4), window=categories_frame, anchor="nw")
 
+        Button(categories_frame, text="+", command=self.OpenAddCategoryWindow).pack(pady=10)
         for category in self.categories:
-            Button(self.categories_window, text=category, command=lambda x=category: self.ChangeCategory(x)).pack(
-                pady=10)
+            Button(categories_frame, text=category, command=lambda x=category: self.ChangeCategory(x)).pack(
+                pady=10, padx=100)
 
-        Button(self.categories_window, text="+", command=self.OpenAddCategoryWindow).pack(pady=10)
+
+        categories_canvas.update_idletasks()
+        categories_canvas.configure(scrollregion=categories_canvas.bbox("all"))
 
     def ChangeCategory(self, category):
         global categories_window
@@ -121,10 +131,15 @@ class Aplication:
 
     def AddCategory(self, category):
         global add_categoty_window
+        global categories_frame
+        global categories_canvas
         self.categories.append(category)
-        self.categories_window.destroy()
+        Button(categories_frame, text=category, command=lambda x=category: self.ChangeCategory(x)).pack(
+            pady=10, padx=100)
+        categories_canvas.update_idletasks()
+        categories_canvas.configure(scrollregion=categories_canvas.bbox("all"))
         self.add_categoty_window.destroy()
-        self.OpenCategoriesWindow()
+
 
 
     def OpenCalendar(self):
