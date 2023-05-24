@@ -47,7 +47,10 @@ class Aplication:
 
         self.plus_input = None
         self.minus_input = None
-        self.categories = ["Все", "Инвестиции", "Здоровье", "Аренда"]
+        self.categories = [x['name'] for x in conn.selectExpCat()] 
+        #выгрузить категории из бд
+        
+        
         self.current_category = StringVar()
         self.current_category.set(self.categories[0])
 
@@ -84,6 +87,7 @@ class Aplication:
         Button(self.bottom_frame, text="Сменить категорию", command=self.OpenCategoriesWindow).grid(row=2, column=4)
 
     def OpenCategoriesWindow(self):
+        #выгрузка категорий из бд - сделать функцию 
         global categories_window
         global categories_frame
         global categories_canvas
@@ -128,12 +132,17 @@ class Aplication:
         new_category.pack(pady=10)
         Button(self.add_categoty_window, text="Ok", command=lambda:self.AddCategory(new_category.get())).pack(pady=10)
 
+        #[done]добавление категории в БД addcat
+
 
     def AddCategory(self, category):
         global add_categoty_window
         global categories_frame
         global categories_canvas
         self.categories.append(category)
+        #
+        conn.addExpCat(category)#expense
+        #
         Button(categories_frame, text=category, command=lambda x=category: self.ChangeCategory(x)).pack(
             pady=10, padx=100)
         categories_canvas.update_idletasks()
@@ -162,17 +171,37 @@ class Aplication:
     def SelectDate(self):
         global current_date
         global calendar_window
-        self.current_date = datetime.datetime.strptime(self.calendar.get_date(), '%m/%d/%y')
+        #
+        self.SaveRecord()
+        #
+        self.current_date = datetime.datetime.strptime(self.calendar.get_date(), '%m/%d/%y')#дата измен
         self.calendar_window.destroy()
         self.selected_button(self.selected_period)
+        #[done]запись в БД прошлого дня, если ячейки пустые null?
         self.RenderBottom()
+    
+    def SaveRecord(self): #++сохранение записи при изменении даты, !!!!!!!!!!!!!!!!выход из приложения - обработать 
+        try:
+            float(self.minus_input.get())
+            float(self.plus_input.get())
+        except ValueError:
+            print("Не число")
+        else:
+            _expId = conn.findExpCatId(self.current_category.get())
+            conn.addExpense(_expId, self.current_date, float (self.minus_input.get()))
+            conn.addIncome(_expId, self.current_date, float (self.plus_input.get()))#+incomecat
 
     def ChangeCurDate(self, days=0):
         global current_date
+        #
+        self.SaveRecord()
+        #
         self.current_date += datetime.timedelta(days=days)
         self.plus_input.delete(0, END)
         self.minus_input.delete(0, END)
         self.selected_button(self.selected_period)
+        #[done]запись в БД прошлого дня, если ячейки пустые null?
+
         self.RenderBottom()
 
     def OnValueChanged(self):
@@ -242,6 +271,9 @@ class Aplication:
             self.priceLine = mp.np.append(self.priceLine,
                                           self.data_base.get(
                                               (self.start + datetime.timedelta(days=i)).strftime("%d %B %Y"), 0))
+            #???
+
+
         # lenX = len(self.priceLine)
         # lenY = len(self.timeLine)
 
@@ -280,6 +312,9 @@ class Aplication:
         #     return
 
         # $(t) and trend line
+
+        ##self.ax.plot(conn.sumExpenseByDays().fetchall(), 
+        #выгрузить на график
         self.ax.plot(self.timeLine, self.priceLine, label='cost', color="#45C4B0", marker=".", linestyle="-")
         self.ax.plot(self.timeLine, p(self.length), label='trend line', color="y", linestyle=":")
         self.ax.legend(loc='lower center')
@@ -295,9 +330,11 @@ class Aplication:
         self.ax_dop = self.figure.add_subplot(3, 7, 7)
         self.radio_buttons = RadioButtons(self.ax_dop, ['week', 'month'], 0, activecolor='black')
         self.radio_buttons.on_clicked(self.selected_button)
+    
 
 
 apl = Aplication()
+
 apl.RenderGraph()
 apl.RenderBottom()
 
