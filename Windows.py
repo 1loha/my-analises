@@ -1,6 +1,0 @@
-class MainWindow(object):
-    pass
-
-
-
-
