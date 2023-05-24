@@ -2,7 +2,10 @@ import os
 import datetime
 import matplotlib.pyplot as mp
 
+
 from tkinter import *
+from PIL import Image, ImageTk
+import tkinter.ttk as ttk
 from SQLData import SQLDataBase
 from tkcalendar import Calendar
 from matplotlib.widgets import RadioButtons
@@ -14,7 +17,6 @@ conn = SQLDataBase(path)
 
 
 class Aplication:
-    # Инициализация окна
     def __init__(self):
         self.main_window = Tk()
         self.main_window.title('Cash App')
@@ -27,7 +29,7 @@ class Aplication:
         self.graph_frame = Frame(self.main_window, background='#FFFFFF')
         self.graph_frame.grid(row=0, column=0, sticky="nsew")
 
-        self.bottom_frame = Frame(self.main_window, background='#DAFDBA')
+        self.bottom_frame = Frame(self.main_window)  # , background='#DAFDBA')
         self.bottom_frame.grid(row=1, column=0, sticky="nsew")
 
         self.length = None
@@ -40,48 +42,51 @@ class Aplication:
         self.priceLine = None
         self.timeLine = None
         self.start = None
-        self.selected_period = 'week'
-        self.data_base = {}
-
-        self.names_categories = []
-
+        self.ax_dop1 = None
+        self.help_bot = None
         self.plus_input = None
         self.minus_input = None
+
+        self.names_categories = []
+        self.data_base = {}
+
+        self.selected_period = 'week'
         self.categories = ["Все", "Инвестиции", "Здоровье", "Аренда"]
+
         self.current_category = StringVar()
         self.current_category.set(self.categories[0])
 
-
         self.current_date = datetime.datetime.today()
-
-        for i in range(4):
-            self.bottom_frame.rowconfigure(i, weight=1)
-        for i in range(6):
-            self.bottom_frame.columnconfigure(i, weight=1)
 
     # дизайн нижней части окна
     def RenderBottom(self):
-        Label(self.bottom_frame, textvariable=self.current_category).grid(row=0, column=2)
+        Button(self.bottom_frame, text="Выбрать дату", command=self.OpenCalendar,
+               background='#DAFDBA').place(relx=0.46, rely=0.2)
 
-        Button(self.bottom_frame, text="Выбрать дату", command=self.OpenCalendar).grid(row=1, column=0)
-        Button(self.bottom_frame, text="<---", command=lambda: self.ChangeCurDate(days=-1)).grid(row=1, column=1)
-        Label(self.bottom_frame, text=self.current_date.strftime("%d %B %Y")).grid(row=1, column=2)
-        Button(self.bottom_frame, text="--->", command=lambda: self.ChangeCurDate(days=1)).grid(row=1, column=3)
+        Button(self.bottom_frame, text="<---", command=lambda: self.ChangeCurDate(days=-1),
+               background='#DAFDBA').place(relx=0.42, rely=0.1)
+        Label(self.bottom_frame, text=self.current_date.strftime("%d %B %Y"),
+              background='#DAFDBA').place(relx=0.465, rely=0.11)
+        Button(self.bottom_frame, text="--->", command=lambda: self.ChangeCurDate(days=1),
+               background='#DAFDBA').place(relx=0.53, rely=0.1)
 
-        Label(self.bottom_frame, text="Доход").grid(row=2, column=0)
-        Label(self.bottom_frame, text="Расход").grid(row=2, column=2)
+        Label(self.bottom_frame, textvariable=self.current_category,
+              background='#DAFDBA').place(relx=0.15, rely=0.11)
+        Button(self.bottom_frame, text="Сменить категорию", command=self.OpenCategoriesWindow,
+               background='#DAFDBA').place(relx=0.05, rely=0.1)
+
+        Label(self.bottom_frame, text="Доход", background='#DAFDBA').place(relx=0.32, rely=0.45)
+        Label(self.bottom_frame, text="Расход", background='#DAFDBA').place(relx=0.62, rely=0.45)
 
         plus_sv = StringVar()
         plus_sv.trace("w", lambda name, index, mode, sv=plus_sv: self.OnValueChanged())
-        self.plus_input = Entry(self.bottom_frame, textvariable=plus_sv)
-        self.plus_input.grid(row=2, column=1)
+        self.plus_input = Entry(self.bottom_frame, textvariable=plus_sv, background='#DAFDBA')
+        self.plus_input.place(relx=0.3, rely=0.55)
 
         minus_sv = StringVar()
         minus_sv.trace("w", lambda name, index, mode, sv=minus_sv: self.OnValueChanged())
-        self.minus_input = Entry(self.bottom_frame, textvariable=minus_sv)
-        self.minus_input.grid(row=2, column=3)
-
-        Button(self.bottom_frame, text="Сменить категорию", command=self.OpenCategoriesWindow).grid(row=2, column=4)
+        self.minus_input = Entry(self.bottom_frame, textvariable=minus_sv, background='#DAFDBA')
+        self.minus_input.place(relx=0.6, rely=0.55)
 
     def OpenCategoriesWindow(self):
         global categories_window
@@ -128,7 +133,6 @@ class Aplication:
         new_category.pack(pady=10)
         Button(self.add_categoty_window, text="Ok", command=lambda:self.AddCategory(new_category.get())).pack(pady=10)
 
-
     def AddCategory(self, category):
         global add_categoty_window
         global categories_frame
@@ -139,8 +143,6 @@ class Aplication:
         categories_canvas.update_idletasks()
         categories_canvas.configure(scrollregion=categories_canvas.bbox("all"))
         self.add_categoty_window.destroy()
-
-
 
     def OpenCalendar(self):
         global calendar_window
@@ -186,7 +188,7 @@ class Aplication:
         try:
             value -= int(self.minus_input.get())
         except ValueError:
-            print("Не число")
+            pass  # print("Не число")
 
         if (self.current_date.strftime("%d %B %Y") in self.data_base.keys()):
             print("В базу данных добавлено значение " +
@@ -295,6 +297,35 @@ class Aplication:
         self.ax_dop = self.figure.add_subplot(3, 7, 7)
         self.radio_buttons = RadioButtons(self.ax_dop, ['week', 'month'], 0, activecolor='black')
         self.radio_buttons.on_clicked(self.selected_button)
+
+        self.ax_dop1 = self.figure.add_subplot(6, 20, 1)
+        self.help_bot = mp.Button(self.ax_dop1, "?")
+        self.help_bot.on_clicked(lambda x: self.open_image())
+        self.help_bot.hovercolor = "grey"
+
+        self.selected_button(self.selected_period)
+        c = Canvas(self.main_window, background="#DAFDBA", width=300, height=300)
+        c.place(anchor="se")
+        c.create_line((0,0,1000,1000))
+        image = Image.open("1.png")
+        image = ImageTk.PhotoImage(image)
+
+    def open_image(self):
+
+
+        image = Image.open("1.png")
+        image = image.resize((290, 290))
+
+
+        text_img = Image.new('RGBA', (300, 300), (0, 0, 0, 0))
+        text_img.paste(image, (200, 100), mask=image)
+
+        image = ImageTk.PhotoImage(image)
+
+        label = Label(self.main_window, image=image)
+        label.image_names = image
+        label.place(relx=1.0, rely=1.0, anchor='se')
+        label.bind("<Button-1>", lambda event: label.destroy())
 
 
 apl = Aplication()
