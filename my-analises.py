@@ -15,7 +15,6 @@ from calendar import monthrange
 path = os.getcwd() + r"\tables.db"
 conn = SQLDataBase(path)
 
-
 class Aplication:
     def __init__(self):
         self.main_window = Tk()
@@ -45,6 +44,7 @@ class Aplication:
         self.help_bot = None
         self.plus_input = None
         self.minus_input = None
+<<<<<<< HEAD
 
         self.names_categories = []
         self.data_base = {}
@@ -55,15 +55,37 @@ class Aplication:
         self.categories = [x['name'] for x in conn.selectExpCat()]
         # ‚˚„ÛÁËÚ¸ Í‡ÚÂ„ÓËË ËÁ ·‰
 
+=======
+        #conn.addExpCat('–í—Å–µ')
+        self.categories = [x['name'] for x in conn.selectExpCat()]
+        #conn.deleteAllRecords()
+        
+        #self.categories.insert(0, '–í—Å–µ')
+        #–≤—ã–≥—Ä—É–∑–∏—Ç—å –∫–∞—Ç–µ–≥–æ—Ä–∏–∏ –∏–∑ –±–¥
+        
+        
+>>>>>>> 4a6cf389f67ea8a11b7d66ab4ea3ceb4f463f3f1
         self.current_category = StringVar()
+        if len(self.categories) == 0:
+            conn.addExpCat('–í—Å–µ')
+            self.categories.append('–í—Å–µ')
         self.current_category.set(self.categories[0])
 
         self.current_date = datetime.datetime.today()
 
     # ‰ËÁ‡ÈÌ ÌËÊÌÂÈ ˜‡ÒÚË ÓÍÌ‡
     def RenderBottom(self):
+<<<<<<< HEAD
         Button(self.bottom_frame, text="¬˚·‡Ú¸ ‰‡ÚÛ", command=self.OpenCalendar,
                background='#DAFDBA').place(relx=0.46, rely=0.2)
+=======
+        #
+        test = conn.sumExpenseByCateg(self.current_date, self.current_date+datetime.timedelta(days=1))
+        for elem in test:
+            print(elem['exp_id'], elem['sumCash'])
+        #
+        Label(self.bottom_frame, textvariable=self.current_category).grid(row=0, column=2)
+>>>>>>> 4a6cf389f67ea8a11b7d66ab4ea3ceb4f463f3f1
 
         Button(self.bottom_frame, text="<---", command=lambda: self.ChangeCurDate(days=-1),
                background='#DAFDBA').place(relx=0.42, rely=0.1)
@@ -190,8 +212,13 @@ class Aplication:
             pass  # print("ÕÂ ˜ËÒÎÓ")
         else:
             _expId = conn.findExpCatId(self.current_category.get())
+<<<<<<< HEAD
             conn.addExpense(_expId, self.current_date, float(self.minus_input.get()))
             conn.addIncome(_expId, self.current_date, float(self.plus_input.get()))  # +incomecat
+=======
+            conn.addExpense(_expId, self.current_date.strftime("%Y-%m-%d"), float (self.minus_input.get()))
+            conn.addIncome(_expId, self.current_date.strftime("%Y-%m-%d"), float (self.plus_input.get()))#+incomecat
+>>>>>>> 4a6cf389f67ea8a11b7d66ab4ea3ceb4f463f3f1
 
     def ChangeCurDate(self, days=0):
         global current_date
@@ -260,11 +287,17 @@ class Aplication:
         self.priceLine = []
         self.timeLine = []
         self.length = []
+
+        #
+        self.daysCashDict = {}
+        #
+
         maxMarks = None
         print(self.selected_period)
         if self.selected_period == 0:  # week
             maxMarks = 7
             self.start = self.current_date - datetime.timedelta(
+<<<<<<< HEAD
                 days=self.current_date.weekday())  # Õ‡˜ËÌ‡ÂÏ Ò ÔÓÌÂ‰ÂÎ¸ÌËÍ‡
             self.timeLine = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
@@ -282,14 +315,49 @@ class Aplication:
         elif self.selected_period == 3:  # all time
             maxMarks = len(self.priceLine)
             self.start = datetime.datetime(self.current_date.year, self.current_date.month, 1)
+=======
+                days=self.current_date.weekday())  # –ù–∞—á–∏–Ω–∞–µ–º —Å –ø–æ–Ω–µ–¥–µ–ª—å–Ω–∏–∫–∞
+            #
+            tempCursor = conn.sumExpenseByDays(self.start.strftime("%Y-%m-%d"), (self.start + datetime.timedelta(days = maxMarks)).strftime("%Y-%m-%d")) #–∑–∞–ø—Ä–æ—Å —Å –≤—ã–±–æ—Ä–∫–æ–π
+            #daysCashDict = conn.sumExpenseByDays(self.start.strftime("%Y-%m-%d"), (self.start + datetime.timedelta(days = maxMarks)).strftime("%Y-%m-%d")) #–≤—ã–≥—Ä—É–∂–∞–µ–º –≤ —Å–ª–æ–≤–∞—Ä—å –∑–∞ –Ω–µ–¥–µ–ª—é
+            daysCashDict = dict((day, cash) for day, cash in tempCursor.fetchall())
+            for iDay in range(maxMarks):
+                keyDict = (self.start + datetime.timedelta(days = iDay)).strftime("%Y-%m-%d")
+                if keyDict not in daysCashDict:
+                    daysCashDict[keyDict] = 0
+            
+            
+            #
+            self.timeLine = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        elif selected_period == 1:  # month
+            maxMarks = monthrange(self.current_date.year, self.current_date.month)[1]  # —Å–∫–æ–ª—å–∫–æ –¥–Ω–µ–π –≤ –º–µ—Å—è—Ü–µ
+            self.start = datetime.datetime(self.current_date.year, self.current_date.month, 1)  # –ù–∞—á–∏–Ω–∞–µ–º —Å 1 —á–∏—Å–ª–∞
+            #
+            #–¥–æ–±–∞–≤–∏—Ç—å daysCashDict
+            #
+>>>>>>> 4a6cf389f67ea8a11b7d66ab4ea3ceb4f463f3f1
             self.timeLine = [str(i + 1) for i in range(maxMarks)]
 
+        #for i in range(maxMarks):
+        #    self.priceLine = mp.np.append(self.priceLine,
+        #                                  self.data_base.get(
+        #                                      (self.start + datetime.timedelta(days=i)).strftime("%d %B %Y"), 0))
         for i in range(maxMarks):
             self.priceLine = mp.np.append(self.priceLine,
+<<<<<<< HEAD
                                           self.data_base.get(
                                               (self.start + datetime.timedelta(days=i)).strftime("%d %B %Y"), 0))
         print(self.priceLine, '\n')
         # ???
+=======
+                                          self.daysCashDict.get(
+                                              (self.start + datetime.timedelta(days=i)).strftime("%Y-%m-%d"), 0))
+
+        #for i in range(maxMarks):
+        #    keyDict = (self.start + datetime.timedelta(days=i)).strftime("%Y-%m-%d")
+        #    self.priceLine = mp.np.append(self.priceLine, self.daysCashDict.get(keyDict),0)
+        #    #???
+>>>>>>> 4a6cf389f67ea8a11b7d66ab4ea3ceb4f463f3f1
 
         maxMarks = 15
         if self.selected_period == 3:
@@ -305,11 +373,17 @@ class Aplication:
 
         # $(t) and trend line
 
+<<<<<<< HEAD
         ##self.ax.plot(conn.sumExpenseByDays().fetchall(),
         # ‚˚„ÛÁËÚ¸ Ì‡ „‡ÙËÍ
 
         self.ax.plot(self.timeLine, self.priceLine, label=self.current_category.get(), color="#45C4B0", marker=".",
                      linestyle="-")
+=======
+        ##self.ax.plot(conn.sumExpenseByDays().fetchall(),
+        #–≤—ã–≥—Ä—É–∑–∏—Ç—å –Ω–∞ –≥—Ä–∞—Ñ–∏–∫
+        self.ax.plot(self.timeLine, self.priceLine, label=self.current_category.get(), color="#45C4B0", marker=".", linestyle="-")
+>>>>>>> 4a6cf389f67ea8a11b7d66ab4ea3ceb4f463f3f1
         self.ax.plot(self.timeLine, p(self.length), label='trend line', color="y", linestyle=":")
         self.ax.legend(loc='lower center')
 
@@ -332,7 +406,11 @@ class Aplication:
 
         # Button(self.bottom_frame, text="?", command=lambda: self.open_image1).place(x=0, y=0)
 
+<<<<<<< HEAD
         self.selected_button()
+=======
+        self.selected_button(self.selected_period)
+>>>>>>> 4a6cf389f67ea8a11b7d66ab4ea3ceb4f463f3f1
 
     def open_image(self):
         image = Image.open("11.png")
@@ -345,6 +423,10 @@ class Aplication:
         label.image_names = image
         label.place(relx=1.0, rely=1.0, anchor='se')
         label.bind("<Button-1>", lambda event: label.destroy())
+<<<<<<< HEAD
+=======
+
+>>>>>>> 4a6cf389f67ea8a11b7d66ab4ea3ceb4f463f3f1
 
 
 apl = Aplication()

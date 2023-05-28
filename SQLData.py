@@ -66,10 +66,10 @@ class SQLDataBase:
 
     # для графика -- сумма трат по дням без учета категорий за период времени, словарь -- результир данные, отсорт по возраст даты
     def sumExpenseByDays(self, dateBegin, dateEnd):  # 1.04 - 4.04
-        res = self.cur.execute("""SELECT (expDate, sum(cash) as sumCash) 
+        res = self.cur.execute("""SELECT expDate, SUM(cash) AS sumCash 
         FROM expense 
-        GROUP BY expDate 
         WHERE (expDate >= ? AND expDate <= ?) 
+        GROUP BY expDate 
         ORDER BY expDate ASC""", (dateBegin, dateEnd))
         self.con.commit()
         return res
@@ -78,38 +78,44 @@ class SQLDataBase:
     def sumIncomeByDays(self, dateBegin, dateEnd):  # 1.04 - 4.04
         res = self.cur.execute("""SELECT (incDate, sum(cash) as sumCash) 
         FROM income 
-        GROUP BY incDate
         WHERE (incDate >= ? AND incDate <= ?) 
+        GROUP BY incDate
         ORDER BY incDate ASC""", (dateBegin, dateEnd))
         self.con.commit()
         return res
 
     # сумма по каждой из категорий за временной промежуток, вывод по убыванию суммы
-    def sumExpenseByCateg(self, dateBegin, dateEnd):
-        res = self.cur.execute("""SELECT (exp_id, sum(cash) as sumCash)
-        FROM execute
+    def sumExpenseByCateg(self, dateBegin, dateEnd):#############
+        res = self.cur.execute("""SELECT exp_id, SUM(cash) AS sumCash
+        FROM expense
+        WHERE (expDate >= ? AND expDate <= ?)
         GROUP BY exp_id
-        WHERE (expDate >= ? AND expDate <= ?) 
         ORDER BY sumCash DESC""", (dateBegin, dateEnd))
         self.con.commit()
         return res
 
     def sumIncomeByCateg(self, dateBegin, dateEnd):
-        res = self.cur.execute("""SELECT (inc_id, sum(cash) as sumCash)
+        res = self.cur.execute("""SELECT inc_id, sum(cash)
         FROM income
-        GROUP BY inc_id
         WHERE (incDate >= ? AND incDate <= ?) 
-        ORDER BY sumCash DESC""", (dateBegin, dateEnd))
+        GROUP BY inc_id
+        ORDER BY sum(cash) DESC""", (dateBegin, dateEnd))
         self.con.commit()
         return res
     def findExpCatId(self, catName):#найти по имени id категории
         numRec = self.cur.execute("""SELECT id FROM expenseCat WHERE name == ?""", [str(catName)])
         return numRec.fetchone()[0]
+
+        
     
     def selectExpCat(self):
         categ = self.cur.execute("SELECT name FROM expenseCat")
         return categ
 
+    def deleteAllRecords(self):
+        self.cur.execute("""DELETE FROM expense""")
+        self.cur.execute("""DELETE FROM income""")
+        self.con.commit()
 
     #возм. методы
     #удалить все записи
