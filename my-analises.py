@@ -3,6 +3,7 @@ import datetime
 import matplotlib.pyplot as mp
 
 from tkinter import *
+from PIL import Image, ImageTk
 from SQLData import SQLDataBase
 from tkcalendar import Calendar
 from matplotlib.widgets import RadioButtons
@@ -12,22 +13,20 @@ from calendar import monthrange
 path = os.getcwd() + r"\tables.db"
 conn = SQLDataBase(path)
 
-
 class Aplication:
     # Инициализация окна
     def __init__(self):
         self.main_window = Tk()
         self.main_window.title('Cash App')
         self.main_window.geometry('1280x720')
-        self.main_window.minsize(800, 600)
-        self.main_window.maxsize(1920, 1080)
+        self.main_window.resizable(width=False, height=False)
         [self.main_window.columnconfigure(i, weight=1) for i in range(2)]
         [self.main_window.rowconfigure(i, weight=1) for i in range(2)]
 
         self.graph_frame = Frame(self.main_window, background='#FFFFFF')
         self.graph_frame.grid(row=0, column=0, sticky="nsew")
 
-        self.bottom_frame = Frame(self.main_window, background='#DAFDBA')
+        self.bottom_frame = Frame(self.main_window)
         self.bottom_frame.grid(row=1, column=0, sticky="nsew")
 
         self.length = None
@@ -47,11 +46,18 @@ class Aplication:
 
         self.plus_input = None
         self.minus_input = None
-        self.categories = [x['name'] for x in conn.selectExpCat()] 
+        #conn.addExpCat('Все')
+        self.categories = [x['name'] for x in conn.selectExpCat()]
+        #conn.deleteAllRecords()
+        
+        #self.categories.insert(0, 'Все')
         #выгрузить категории из бд
         
         
         self.current_category = StringVar()
+        if len(self.categories) == 0:
+            conn.addExpCat('Все')
+            self.categories.append('Все')
         self.current_category.set(self.categories[0])
 
 
@@ -64,6 +70,11 @@ class Aplication:
 
     # дизайн нижней части окна
     def RenderBottom(self):
+        #
+        test = conn.sumExpenseByCateg(self.current_date, self.current_date+datetime.timedelta(days=1))
+        for elem in test:
+            print(elem['exp_id'], elem['sumCash'])
+        #
         Label(self.bottom_frame, textvariable=self.current_category).grid(row=0, column=2)
 
         Button(self.bottom_frame, text="Выбрать дату", command=self.OpenCalendar).grid(row=1, column=0)
@@ -188,8 +199,8 @@ class Aplication:
             print("Не число")
         else:
             _expId = conn.findExpCatId(self.current_category.get())
-            conn.addExpense(_expId, self.current_date, float (self.minus_input.get()))
-            conn.addIncome(_expId, self.current_date, float (self.plus_input.get()))#+incomecat
+            conn.addExpense(_expId, self.current_date.strftime("%Y-%m-%d"), float (self.minus_input.get()))
+            conn.addIncome(_expId, self.current_date.strftime("%Y-%m-%d"), float (self.plus_input.get()))#+incomecat
 
     def ChangeCurDate(self, days=0):
         global current_date
@@ -248,16 +259,35 @@ class Aplication:
         self.priceLine = []
         self.timeLine = []
         self.length = []
+
+        #
+        self.daysCashDict = {}
+        #
+
         maxMarks = None
 
         if selected_period == 0:  # week
             maxMarks = 7
             self.start = self.current_date - datetime.timedelta(
                 days=self.current_date.weekday())  # Начинаем с понедельника
+            #
+            tempCursor = conn.sumExpenseByDays(self.start.strftime("%Y-%m-%d"), (self.start + datetime.timedelta(days = maxMarks)).strftime("%Y-%m-%d")) #запрос с выборкой
+            #daysCashDict = conn.sumExpenseByDays(self.start.strftime("%Y-%m-%d"), (self.start + datetime.timedelta(days = maxMarks)).strftime("%Y-%m-%d")) #выгружаем в словарь за неделю
+            daysCashDict = dict((day, cash) for day, cash in tempCursor.fetchall())
+            for iDay in range(maxMarks):
+                keyDict = (self.start + datetime.timedelta(days = iDay)).strftime("%Y-%m-%d")
+                if keyDict not in daysCashDict:
+                    daysCashDict[keyDict] = 0
+            
+            
+            #
             self.timeLine = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
         elif selected_period == 1:  # month
             maxMarks = monthrange(self.current_date.year, self.current_date.month)[1]  # сколько дней в месяце
             self.start = datetime.datetime(self.current_date.year, self.current_date.month, 1)  # Начинаем с 1 числа
+            #
+            #добавить daysCashDict
+            #
             self.timeLine = [str(i + 1) for i in range(maxMarks)]
         # elif selected_period == 2:  # year
         #     maxMarks = 12
@@ -267,11 +297,19 @@ class Aplication:
         #     start = datetime.datetime(self.current_date.year, self.current_date.month, 1)
         #     self.timeLine = ['first quarter', 'second quarter', 'third quarter', 'last quarter']
 
+        #for i in range(maxMarks):
+        #    self.priceLine = mp.np.append(self.priceLine,
+        #                                  self.data_base.get(
+        #                                      (self.start + datetime.timedelta(days=i)).strftime("%d %B %Y"), 0))
         for i in range(maxMarks):
             self.priceLine = mp.np.append(self.priceLine,
-                                          self.data_base.get(
-                                              (self.start + datetime.timedelta(days=i)).strftime("%d %B %Y"), 0))
-            #???
+                                          self.daysCashDict.get(
+                                              (self.start + datetime.timedelta(days=i)).strftime("%Y-%m-%d"), 0))
+
+        #for i in range(maxMarks):
+        #    keyDict = (self.start + datetime.timedelta(days=i)).strftime("%Y-%m-%d")
+        #    self.priceLine = mp.np.append(self.priceLine, self.daysCashDict.get(keyDict),0)
+        #    #???
 
 
         # lenX = len(self.priceLine)
@@ -315,7 +353,7 @@ class Aplication:
 
         ##self.ax.plot(conn.sumExpenseByDays().fetchall(), 
         #выгрузить на график
-        self.ax.plot(self.timeLine, self.priceLine, label='cost', color="#45C4B0", marker=".", linestyle="-")
+        self.ax.plot(self.timeLine, self.priceLine, label=self.current_category.get(), color="#45C4B0", marker=".", linestyle="-")
         self.ax.plot(self.timeLine, p(self.length), label='trend line', color="y", linestyle=":")
         self.ax.legend(loc='lower center')
 
@@ -330,6 +368,27 @@ class Aplication:
         self.ax_dop = self.figure.add_subplot(3, 7, 7)
         self.radio_buttons = RadioButtons(self.ax_dop, ['week', 'month'], 0, activecolor='black')
         self.radio_buttons.on_clicked(self.selected_button)
+
+        self.ax_dop1 = self.figure.add_subplot(6, 20, 1)
+        self.help_bot = mp.Button(self.ax_dop1, "?")
+        self.help_bot.on_clicked(lambda x: self.open_image())
+        self.help_bot.hovercolor = "grey"
+
+        # Button(self.bottom_frame, text="?", command=lambda: self.open_image1).place(x=0, y=0)
+
+        self.selected_button(self.selected_period)
+
+    def open_image(self):
+        image = Image.open("11.png")
+        image = image.resize((380, 290))
+        # text_img = Image.new('RGBA', (200, 200), (0, 0, 0, 0))
+        # text_img.paste(image, (200, 100), mask=image)
+        image = ImageTk.PhotoImage(image)
+
+        label = Label(self.main_window, image=image)
+        label.image_names = image
+        label.place(relx=1.0, rely=1.0, anchor='se')
+        label.bind("<Button-1>", lambda event: label.destroy())
     
 
 
