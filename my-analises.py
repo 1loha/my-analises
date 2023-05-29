@@ -1,5 +1,4 @@
-# -*- coding: Windows-1251 -*-
-from ipaddress import v4_int_to_packed
+# -*- coding: UTF-8 -*-
 import os
 import datetime
 import matplotlib.pyplot as mp
@@ -7,7 +6,7 @@ import matplotlib.pyplot as mp
 from tkinter import *
 from PIL import Image, ImageTk
 from SQLData import SQLDataBase
-from tkcalendar import Calendar  # включи при себе
+from tkcalendar import Calendar
 from matplotlib.widgets import RadioButtons
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from calendar import monthrange
@@ -15,7 +14,9 @@ from calendar import monthrange
 path = os.getcwd() + r"\tables.db"
 conn = SQLDataBase(path)
 
-class Aplication:
+
+class Application:
+    # РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РѕРєРЅР°
     def __init__(self):
         self.main_window = Tk()
         self.main_window.title('Cash App')
@@ -42,29 +43,21 @@ class Aplication:
         self.start = None
         self.ax_dop1 = None
         self.help_bot = None
-        self.plus_input = None
-        self.minus_input = None
-<<<<<<< HEAD
+        self.tmp = True
+        self.selected_period = 'week'
+        self.daysCashDict = {}
 
         self.names_categories = []
-        self.data_base = {}
 
-        self.selected_period = 'week'
-        self.categories = ["Все", "Инвестиции", "Здоровье", "Аренда"]
-
+        self.plus_input = None
+        self.minus_input = None
+        # conn.addExpCat('Р’СЃРµ')
         self.categories = [x['name'] for x in conn.selectExpCat()]
-        # выгрузить категории из бд
+        # conn.deleteAllRecords()
 
-=======
-        #conn.addExpCat('Р’СЃРµ')
-        self.categories = [x['name'] for x in conn.selectExpCat()]
-        #conn.deleteAllRecords()
-        
-        #self.categories.insert(0, 'Р’СЃРµ')
-        #РІС‹РіСЂСѓР·РёС‚СЊ РєР°С‚РµРіРѕСЂРёРё РёР· Р±Рґ
-        
-        
->>>>>>> 4a6cf389f67ea8a11b7d66ab4ea3ceb4f463f3f1
+        # self.categories.insert(0, 'Р’СЃРµ')
+        # РІС‹РіСЂСѓР·РёС‚СЊ РєР°С‚РµРіРѕСЂРёРё РёР· Р±Рґ
+
         self.current_category = StringVar()
         if len(self.categories) == 0:
             conn.addExpCat('Р’СЃРµ')
@@ -73,20 +66,15 @@ class Aplication:
 
         self.current_date = datetime.datetime.today()
 
-    # дизайн нижней части окна
-    def RenderBottom(self):
-<<<<<<< HEAD
-        Button(self.bottom_frame, text="Выбрать дату", command=self.OpenCalendar,
-               background='#DAFDBA').place(relx=0.46, rely=0.2)
-=======
-        #
-        test = conn.sumExpenseByCateg(self.current_date, self.current_date+datetime.timedelta(days=1))
-        for elem in test:
-            print(elem['exp_id'], elem['sumCash'])
-        #
-        Label(self.bottom_frame, textvariable=self.current_category).grid(row=0, column=2)
->>>>>>> 4a6cf389f67ea8a11b7d66ab4ea3ceb4f463f3f1
+        for i in range(4):
+            self.bottom_frame.rowconfigure(i, weight=1)
+        for i in range(6):
+            self.bottom_frame.columnconfigure(i, weight=1)
 
+    # РґРёР·Р°Р№РЅ РЅРёР¶РЅРµР№ С‡Р°СЃС‚Рё РѕРєРЅР°
+    def RenderBottom(self):
+        Button(self.bottom_frame, text="Р’С‹Р±СЂР°С‚СЊ РґР°С‚Сѓ", command=self.OpenCalendar,
+               background='#DAFDBA').place(relx=0.46, rely=0.2)
         Button(self.bottom_frame, text="<---", command=lambda: self.ChangeCurDate(days=-1),
                background='#DAFDBA').place(relx=0.42, rely=0.1)
         Label(self.bottom_frame, text=self.current_date.strftime("%d %B %Y"),
@@ -96,32 +84,39 @@ class Aplication:
 
         Label(self.bottom_frame, textvariable=self.current_category,
               background='#DAFDBA').place(relx=0.2, rely=0.11)
-        Button(self.bottom_frame, text="Сменить категорию", command=self.OpenCategoriesWindow,
+        Button(self.bottom_frame, text="РЎРјРµРЅРёС‚СЊ РєР°С‚РµРіРѕСЂРёСЋ", command=self.OpenCategoriesWindow,
                background='#DAFDBA').place(relx=0.1, rely=0.1)
 
-        Label(self.bottom_frame, text="Доход", background='#DAFDBA').place(relx=0.32, rely=0.45)
-        Label(self.bottom_frame, text="Расход", background='#DAFDBA').place(relx=0.62, rely=0.45)
+        Label(self.bottom_frame, text="Р”РѕС…РѕРґ", background='#DAFDBA').place(relx=0.32, rely=0.45)
+        Label(self.bottom_frame, text="Р Р°СЃС…РѕРґ", background='#DAFDBA').place(relx=0.62, rely=0.45)
 
         plus_sv = StringVar()
-        plus_sv.trace("w", lambda name, index, mode, sv=plus_sv: self.OnValueChanged())
         self.plus_input = Entry(self.bottom_frame, textvariable=plus_sv, background='#DAFDBA')
         self.plus_input.place(relx=0.3, rely=0.55)
+        plus_sv.trace("w", lambda name, index, mode, sv=plus_sv: self.OnValueChanged())
 
         minus_sv = StringVar()
-        minus_sv.trace("w", lambda name, index, mode, sv=minus_sv: self.OnValueChanged())
         self.minus_input = Entry(self.bottom_frame, textvariable=minus_sv, background='#DAFDBA')
         self.minus_input.place(relx=0.6, rely=0.55)
+        minus_sv.trace("w", lambda name, index, mode, sv=minus_sv: self.OnValueChanged())
+
+        def clear_entry(event):
+            event.widget.delete(0, 'end')
+
+        self.plus_input.bind('<FocusOut>', clear_entry)
+        self.minus_input.bind('<FocusOut>', clear_entry)
+
+
+
 
     def OpenCategoriesWindow(self):
-        # ///////////////////////////// обновлять график другой категории
-        self.priceLine = None
-        # выгрузка категорий из бд - сделать функцию
+        # РІС‹РіСЂСѓР·РєР° РєР°С‚РµРіРѕСЂРёР№ РёР· Р±Рґ - СЃРґРµР»Р°С‚СЊ С„СѓРЅРєС†РёСЋ
         global categories_window
         global categories_frame
         global categories_canvas
         self.categories_window = Toplevel()
         # self.categories_window.grab_set()
-        self.categories_window.title("Выбор категории")
+        self.categories_window.title("Р’С‹Р±РѕСЂ РєР°С‚РµРіРѕСЂРёРё")
         self.categories_window.geometry("300x300")
         self.categories_window.resizable(False, False)
 
@@ -146,20 +141,20 @@ class Aplication:
         self.current_category.set(category)
         self.RenderBottom()
         self.categories_window.destroy()
-        self.selected_button()
+        self.selected_button(self.selected_period)
 
     def OpenAddCategoryWindow(self):
         global add_categoty_window
         self.add_categoty_window = Toplevel()
         # self.categories_window.grab_set()
-        self.add_categoty_window.title("Добавить категорию")
+        self.add_categoty_window.title("Р”РѕР±Р°РІРёС‚СЊ РєР°С‚РµРіРѕСЂРёСЋ")
         self.add_categoty_window.geometry("200x200")
         self.add_categoty_window.resizable(False, False)
         new_category = Entry(self.add_categoty_window)
         new_category.pack(pady=10)
         Button(self.add_categoty_window, text="Ok", command=lambda: self.AddCategory(new_category.get())).pack(pady=10)
 
-        # [done]добавление категории в БД addcat
+        # [done]РґРѕР±Р°РІР»РµРЅРёРµ РєР°С‚РµРіРѕСЂРёРё РІ Р‘Р” addcat
 
     def AddCategory(self, category):
         global add_categoty_window
@@ -179,7 +174,7 @@ class Aplication:
         global calendar_window
         self.calendar_window = Toplevel()
         self.calendar_window.grab_set()
-        self.calendar_window.title("Выбор даты")
+        self.calendar_window.title("Р’С‹Р±РѕСЂ РґР°С‚С‹")
         self.calendar_window.geometry("300x300")
         self.calendar_window.resizable(False, False)
         global calendar
@@ -196,198 +191,150 @@ class Aplication:
         global current_date
         global calendar_window
         #
-        self.SaveRecord()
+        # self.SaveRecord()
         #
-        self.current_date = datetime.datetime.strptime(self.calendar.get_date(), '%m/%d/%y')  # дата измен
+        self.current_date = datetime.datetime.strptime(self.calendar.get_date(), '%Y-%m-%d')  # РґР°С‚Р° РёР·РјРµРЅ
         self.calendar_window.destroy()
-        self.selected_button()
-        # [done]запись в БД прошлого дня, если ячейки пустые null?
+        self.selected_button(self.selected_period)
+        # [done]Р·Р°РїРёСЃСЊ РІ Р‘Р” РїСЂРѕС€Р»РѕРіРѕ РґРЅСЏ, РµСЃР»Рё СЏС‡РµР№РєРё РїСѓСЃС‚С‹Рµ null?
         self.RenderBottom()
 
-    def SaveRecord(self):  # ++сохранение записи при изменении даты, !!!!!!!!!!!!!!!!выход из приложения - обработать
-        try:
-            float(self.minus_input.get())
-            float(self.plus_input.get())
-        except ValueError:
-            pass  # print("Не число")
-        else:
-            _expId = conn.findExpCatId(self.current_category.get())
-<<<<<<< HEAD
-            conn.addExpense(_expId, self.current_date, float(self.minus_input.get()))
-            conn.addIncome(_expId, self.current_date, float(self.plus_input.get()))  # +incomecat
-=======
-            conn.addExpense(_expId, self.current_date.strftime("%Y-%m-%d"), float (self.minus_input.get()))
-            conn.addIncome(_expId, self.current_date.strftime("%Y-%m-%d"), float (self.plus_input.get()))#+incomecat
->>>>>>> 4a6cf389f67ea8a11b7d66ab4ea3ceb4f463f3f1
+    def SaveRecord(self, plus, minus):  # ++СЃРѕС…СЂР°РЅРµРЅРёРµ Р·Р°РїРёСЃРё РїСЂРё РёР·РјРµРЅРµРЅРёРё РґР°С‚С‹, !!!!!!!!!!!!!!!!РІС‹С…РѕРґ РёР· РїСЂРёР»РѕР¶РµРЅРёСЏ - РѕР±СЂР°Р±РѕС‚Р°С‚СЊ
+        # try:
+        #     self.plus_input.get() ########################################################################################
+        # except ValueError:
+        #     pass
+        #
+        # try:
+        #     self.minus_input.get()
+        # except ValueError:
+        #     pass
+
+        # else:
+        _expId = conn.findExpCatId(self.current_category.get())
+        conn.addExpense(_expId, self.current_date.strftime("%Y-%m-%d"), minus)  # self.minus_input.get())
+        conn.addIncome(_expId, self.current_date.strftime("%Y-%m-%d"), plus)   # self.plus_input.get())  # +incomecat
 
     def ChangeCurDate(self, days=0):
         global current_date
-        self.SaveRecord()
+        #
+        # self.SaveRecord()
+        #
         self.current_date += datetime.timedelta(days=days)
-        # self.plus_input.delete(0, END)
-        # self.minus_input.delete(0, END)
-        self.selected_button()
-        # [done]запись в БД прошлого дня, если ячейки пустые null?
+        self.selected_button(self.selected_period)
 
         self.RenderBottom()
 
     def OnValueChanged(self):
-
-        value = 0
+        value, plus, minus = 0, 0, 0
         try:
-            value += int(self.plus_input.get())  # пришел доход
-            print(int(self.plus_input.get()))
-
+            plus += int(self.plus_input.get())  # РїСЂРёС€РµР» РґРѕС…РѕРґ
+            print("plus =", plus)
         except ValueError:
             pass
 
         try:
-            value -= int(self.minus_input.get())  # пришел расход
-            print(int(self.minus_input.get()))
+            minus -= int(self.minus_input.get())  # РїСЂРёС€РµР» СЂР°СЃС…РѕРґ
+            print("value =", minus)
         except ValueError:
             pass
 
-        #  где то тут при стирании значения, данные лишний раз сохраняются
+        self.SaveRecord(plus, minus)
+         #  РЅРµ СЃРѕС…СЂР°РЅСЏРµС‚ РґРѕС…РѕРґ РІ 30 С‡РёСЃР»Рµ
+        #  РЅРµРїСЂР°Р°РІРёР»СЊРЅРѕ СЂР°Р±РѕС‚Р°РµС‚, РµСЃР»Рё Р·РЅР°С‡РµРЅРёСЏ РµСЃС‚СЊ Рё РІ РґРѕС…РѕРґРµ, Рё РІ СЂР°СЃС…РѕРґРµ
+        # РІСЃРµ РёРґРµС‚ РІ РґРѕС…РѕРґ..
+        value += plus + minus
 
-        if (self.current_date.strftime("%d %B %Y") in self.data_base.keys()):
-
-            print("value = ", value)
-
-            value += self.data_base[self.current_date.strftime("%d %B %Y")]
-            self.data_base[self.current_date.strftime("%d %B %Y")] = value
-
-            print("В базу данных добавлено значение " + str(value) + " для даты " + self.current_date.strftime(
-                "%d %B %Y"))
-
-            print("db[date] = ", self.data_base[self.current_date.strftime("%d %B %Y")])
+        if (self.current_date.strftime("%Y-%m-%d") in self.daysCashDict.keys()):
+            print("++++++++++++++++++++++++++++++++++++++++++++++++")
+            # print("Р’ Р±Р°Р·Сѓ РґР°РЅРЅС‹С… РґРѕР±Р°РІР»РµРЅРѕ Р·РЅР°С‡РµРЅРёРµ " + str(value) + " РґР»СЏ РґР°С‚С‹ " + self.current_date.strftime(
+            #     "%Y-%m-%d"))
+            self.daysCashDict[self.current_date.strftime("%Y-%m-%d")] += value
+            print("db[date] = ", self.daysCashDict[self.current_date.strftime("%Y-%m-%d")])
         else:
-            # value += self.data_base[self.current_date.strftime("%d %B %Y")]
+            print("------------------------------------------------")
+            # self.daysCashDict.update({self.current_date.strftime("%Y-%m-%d"): 0})
+            self.daysCashDict[self.current_date.strftime("%Y-%m-%d")] += value
+            # print("РІРЅРµСЃРµРЅРѕ Р·РЅР°С‡РµРЅРёРµ " + str(value) + " РґР»СЏ РґР°С‚С‹ " + self.current_date.strftime("%Y-%m-%d"))
 
-            self.data_base.update({self.current_date.strftime("%d %B %Y"): value})
-            print("внесено значение " + str(value) + " для даты " + self.current_date.strftime("%d %B %Y"))
+        self.selected_button(self.selected_period)
 
-        # value = 0
-
-        self.selected_button()
-
-    def selected_button(self):
+    def selected_button(self, label):
         i_dict = {
             "week": 0,
-            "month": 1,
-            "year": 2,
-            "all time": 3
+            "month": 1
         }
-        self.selected_period = i_dict.get(self.selected_period, 0)
-        self.render_lines()
+        i = i_dict.get(label, 0)
+        self.selected_period = i
+        self.render_lines(i)
         self.canvas.draw()
 
-    def render_lines(self):
+    def render_lines(self, selected_period):
         self.ax.clear()
         self.ax.grid()
         self.priceLine = []
         self.timeLine = []
         self.length = []
+        maxMarks = 0
 
-        #
-        self.daysCashDict = {}
-        #
+        if selected_period == 0:  # week
 
-        maxMarks = None
-        print(self.selected_period)
-        if self.selected_period == 0:  # week
+            # РєРѕР»РёС‡РµСЃС‚РІРѕ РјРµС‚РѕРє РґР»СЏ РЅРµРґРµР»Рё
             maxMarks = 7
-            self.start = self.current_date - datetime.timedelta(
-<<<<<<< HEAD
-                days=self.current_date.weekday())  # Начинаем с понедельника
-            self.timeLine = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
-        elif self.selected_period == 1:  # month
-            maxMarks = monthrange(self.current_date.year, self.current_date.month)[1]  # сколько дней в месяце
-            self.start = datetime.datetime(self.current_date.year, self.current_date.month, 1)  # Начинаем с 1 числа
-            self.timeLine = [str(i + 1) for i in range(maxMarks)]
+            # РќР°С‡РёРЅР°РµРј СЃ РїРѕРЅРµРґРµР»СЊРЅРёРєР°
+            self.start = self.current_date - datetime.timedelta(days=self.current_date.weekday())
 
-        elif self.selected_period == 2:  # year
-            maxMarks = 12
-            self.start = self.current_date - datetime.timedelta(
-                days=self.current_date.weekday())  # datetime.datetime(self.current_date.year, 1, 1)
-            self.timeLine = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec']
+            if self.tmp:
+                # Р·Р°РїСЂРѕСЃ РґР°РЅРЅС‹С… Р‘Р” Р·Р° РЅРµРґРµР»СЋ
+                tempCursor = conn.sumExpenseByDays(self.start.strftime("%Y-%m-%d"),
+                                                   (self.start + datetime.timedelta(days=maxMarks)).strftime("%Y-%m-%d"))
+                # Р·Р°РЅРµСЃС‚Рё СЃР»РѕРІР°СЂРµРј key-value
+                self.daysCashDict = dict((day, cash) for day, cash in tempCursor.fetchall())
+                self.tmp = False
 
-        elif self.selected_period == 3:  # all time
-            maxMarks = len(self.priceLine)
-            self.start = datetime.datetime(self.current_date.year, self.current_date.month, 1)
-=======
-                days=self.current_date.weekday())  # РќР°С‡РёРЅР°РµРј СЃ РїРѕРЅРµРґРµР»СЊРЅРёРєР°
-            #
-            tempCursor = conn.sumExpenseByDays(self.start.strftime("%Y-%m-%d"), (self.start + datetime.timedelta(days = maxMarks)).strftime("%Y-%m-%d")) #Р·Р°РїСЂРѕСЃ СЃ РІС‹Р±РѕСЂРєРѕР№
-            #daysCashDict = conn.sumExpenseByDays(self.start.strftime("%Y-%m-%d"), (self.start + datetime.timedelta(days = maxMarks)).strftime("%Y-%m-%d")) #РІС‹РіСЂСѓР¶Р°РµРј РІ СЃР»РѕРІР°СЂСЊ Р·Р° РЅРµРґРµР»СЋ
-            daysCashDict = dict((day, cash) for day, cash in tempCursor.fetchall())
+            # РїСЂРѕРёРЅРёС†РёР°Р»РёР·РёСЂРѕРІР°С‚СЊ РЅСѓР»СЏРјРё РїСѓСЃС‚С‹Рµ Р·РЅР°С‡РµРЅРёСЏ
             for iDay in range(maxMarks):
-                keyDict = (self.start + datetime.timedelta(days = iDay)).strftime("%Y-%m-%d")
-                if keyDict not in daysCashDict:
-                    daysCashDict[keyDict] = 0
-            
-            
-            #
+                keyDict = (self.start + datetime.timedelta(days=iDay)).strftime("%Y-%m-%d")
+                if keyDict not in self.daysCashDict:
+                    self.daysCashDict[keyDict] = 0
+
             self.timeLine = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
         elif selected_period == 1:  # month
             maxMarks = monthrange(self.current_date.year, self.current_date.month)[1]  # СЃРєРѕР»СЊРєРѕ РґРЅРµР№ РІ РјРµСЃСЏС†Рµ
             self.start = datetime.datetime(self.current_date.year, self.current_date.month, 1)  # РќР°С‡РёРЅР°РµРј СЃ 1 С‡РёСЃР»Р°
             #
-            #РґРѕР±Р°РІРёС‚СЊ daysCashDict
+            # РґРѕР±Р°РІРёС‚СЊ daysCashDict
             #
->>>>>>> 4a6cf389f67ea8a11b7d66ab4ea3ceb4f463f3f1
             self.timeLine = [str(i + 1) for i in range(maxMarks)]
 
-        #for i in range(maxMarks):
-        #    self.priceLine = mp.np.append(self.priceLine,
-        #                                  self.data_base.get(
-        #                                      (self.start + datetime.timedelta(days=i)).strftime("%d %B %Y"), 0))
+
+
+        # РІС‹РЅРµСЃС‚Рё РёР· СЃР»РѕРІР°СЂСЏ Р‘Р” Р·РЅР°С‡РµРЅРёСЏ РІ РѕР±С‹С‡РЅС‹Р№ РјР°СЃСЃРёРІ Р·Р° РєР°Р¶РґС‹Р№ РґРµРЅСЊ
         for i in range(maxMarks):
-            self.priceLine = mp.np.append(self.priceLine,
-<<<<<<< HEAD
-                                          self.data_base.get(
-                                              (self.start + datetime.timedelta(days=i)).strftime("%d %B %Y"), 0))
-        print(self.priceLine, '\n')
-        # ???
-=======
-                                          self.daysCashDict.get(
+            self.priceLine = mp.np.append(self.priceLine, self.daysCashDict.get(
                                               (self.start + datetime.timedelta(days=i)).strftime("%Y-%m-%d"), 0))
 
-        #for i in range(maxMarks):
-        #    keyDict = (self.start + datetime.timedelta(days=i)).strftime("%Y-%m-%d")
-        #    self.priceLine = mp.np.append(self.priceLine, self.daysCashDict.get(keyDict),0)
-        #    #???
->>>>>>> 4a6cf389f67ea8a11b7d66ab4ea3ceb4f463f3f1
+        print("priceLine =", self.priceLine, '\n')
 
-        maxMarks = 15
-        if self.selected_period == 3:
-            self.ax.xaxis.set_major_locator(mp.MaxNLocator(maxMarks))
+        # РїРѕ РѕСЃРё y СѓСЃС‚Р°РЅРѕРІРёС‚СЊ РѕРіСЂР°РЅРёС‡РµРЅРёРµ РІ 15 Р·РЅР°С‡РµРЅРёР№
         self.ax.yaxis.set_major_locator(mp.MaxNLocator(maxMarks))
 
-        for j in range(len(self.priceLine)):
+        # РїСЂРёСЂР°РІРЅСЏС‚СЊ РєРѕР»РёС‡РµСЃС‚РІРѕ РјРµС‚РѕРє РїРѕ РѕСЃРё x РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ y
+        for j in range(len(self.daysCashDict)):
             self.length = mp.np.append(self.length, j)
 
-        # maybe these string should be below
+        # РїРѕСЃС‚СЂРѕРёС‚СЊ Р»РёРЅРёСЋ С‚СЂРµРЅРґР°
         z = mp.np.polyfit(self.length, self.priceLine, 1)
         p = mp.np.poly1d(z)
 
-        # $(t) and trend line
-
-<<<<<<< HEAD
-        ##self.ax.plot(conn.sumExpenseByDays().fetchall(),
-        # выгрузить на график
-
-        self.ax.plot(self.timeLine, self.priceLine, label=self.current_category.get(), color="#45C4B0", marker=".",
-                     linestyle="-")
-=======
-        ##self.ax.plot(conn.sumExpenseByDays().fetchall(),
-        #РІС‹РіСЂСѓР·РёС‚СЊ РЅР° РіСЂР°С„РёРє
+        # РїРѕСЃС‚СЂРѕРёС‚СЊ РіСЂР°С„РёРєРё
         self.ax.plot(self.timeLine, self.priceLine, label=self.current_category.get(), color="#45C4B0", marker=".", linestyle="-")
->>>>>>> 4a6cf389f67ea8a11b7d66ab4ea3ceb4f463f3f1
         self.ax.plot(self.timeLine, p(self.length), label='trend line', color="y", linestyle=":")
         self.ax.legend(loc='lower center')
 
-    # визуализация графика
+    # РІРёР·СѓР°Р»РёР·Р°С†РёСЏ РіСЂР°С„РёРєР°
     def RenderGraph(self):
         self.figure = mp.Figure(figsize=(15, 1), dpi=130, facecolor="#45C4B0")
         self.ax = self.figure.add_subplot(1, 1, 1)
@@ -396,7 +343,7 @@ class Aplication:
         self.canvas.get_tk_widget().grid(row=0, column=0, sticky='nsew')
 
         self.ax_dop = self.figure.add_subplot(3, 7, 7)
-        self.radio_buttons = RadioButtons(self.ax_dop, ['week', 'month', 'year', 'all time'], 0, activecolor='black')
+        self.radio_buttons = RadioButtons(self.ax_dop, ['week', 'month'], 0, activecolor='black')
         self.radio_buttons.on_clicked(self.selected_button)
 
         self.ax_dop1 = self.figure.add_subplot(6, 20, 1)
@@ -406,32 +353,20 @@ class Aplication:
 
         # Button(self.bottom_frame, text="?", command=lambda: self.open_image1).place(x=0, y=0)
 
-<<<<<<< HEAD
-        self.selected_button()
-=======
         self.selected_button(self.selected_period)
->>>>>>> 4a6cf389f67ea8a11b7d66ab4ea3ceb4f463f3f1
 
     def open_image(self):
         image = Image.open("11.png")
         image = image.resize((380, 290))
-        # text_img = Image.new('RGBA', (200, 200), (0, 0, 0, 0))
-        # text_img.paste(image, (200, 100), mask=image)
         image = ImageTk.PhotoImage(image)
 
         label = Label(self.main_window, image=image)
         label.image_names = image
         label.place(relx=1.0, rely=1.0, anchor='se')
         label.bind("<Button-1>", lambda event: label.destroy())
-<<<<<<< HEAD
-=======
-
->>>>>>> 4a6cf389f67ea8a11b7d66ab4ea3ceb4f463f3f1
 
 
-apl = Aplication()
-
+apl = Application()
 apl.RenderGraph()
 apl.RenderBottom()
-
 apl.main_window.mainloop()

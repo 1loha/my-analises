@@ -39,13 +39,14 @@ class SQLDataBase:
     def addIncCat(self, catName):
         self.cur.execute("INSERT INTO incomeCat(name) VALUES(?)", [catName])
         self.con.commit()
-    # + расх/дох запись
-    #def addExpense(self, exp_id, _date, cash, com):  # +without com
-        #self.cur.execute("INSERT INTO expense(exp_id, expDate, cash, com) VALUES(?,?,?,?)", (exp_id, _date, cash, com))
-        #self.con.commit()
 
-    #def addIncome(self, inc_id, _date, cash, com):  # -=-
-        #self.cur.execute("INSERT INTO income(inc_id, incDate, cash, com) VALUES(?,?,?,?)", (inc_id, _date, cash, com))
+    # + расх/дох запись
+    # def addExpense(self, exp_id, _date, cash, com):  # +without com
+    # self.cur.execute("INSERT INTO expense(exp_id, expDate, cash, com) VALUES(?,?,?,?)", (exp_id, _date, cash, com))
+    # self.con.commit()
+
+    # def addIncome(self, inc_id, _date, cash, com):  # -=-
+    # self.cur.execute("INSERT INTO income(inc_id, incDate, cash, com) VALUES(?,?,?,?)", (inc_id, _date, cash, com))
 
     def addExpense(self, exp_id, _date, cash):  # +without com
         self.cur.execute("INSERT INTO expense(exp_id, expDate, cash) VALUES(?,?,?)", (exp_id, _date, cash))
@@ -85,7 +86,7 @@ class SQLDataBase:
         return res
 
     # сумма по каждой из категорий за временной промежуток, вывод по убыванию суммы
-    def sumExpenseByCateg(self, dateBegin, dateEnd):#############
+    def sumExpenseByCateg(self, dateBegin, dateEnd):  #############
         res = self.cur.execute("""SELECT exp_id, SUM(cash) AS sumCash
         FROM expense
         WHERE (expDate >= ? AND expDate <= ?)
@@ -102,12 +103,11 @@ class SQLDataBase:
         ORDER BY sum(cash) DESC""", (dateBegin, dateEnd))
         self.con.commit()
         return res
-    def findExpCatId(self, catName):#найти по имени id категории
+
+    def findExpCatId(self, catName):  # найти по имени id категории
         numRec = self.cur.execute("""SELECT id FROM expenseCat WHERE name == ?""", [str(catName)])
         return numRec.fetchone()[0]
 
-        
-    
     def selectExpCat(self):
         categ = self.cur.execute("SELECT name FROM expenseCat")
         return categ
@@ -117,7 +117,7 @@ class SQLDataBase:
         self.cur.execute("""DELETE FROM income""")
         self.con.commit()
 
-    #возм. методы
-    #удалить все записи
-    #удаление категории -> удаление с ней записей
-    #удалить все категории ?? -> удалить все записи
+    # возм. методы
+    # удалить все записи
+    # удаление категории -> удаление с ней записей
+    # удалить все категории ?? -> удалить все записи
