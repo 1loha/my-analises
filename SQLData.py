@@ -75,15 +75,15 @@ class SQLDataBase:
         self.con.commit()
         return res
 
-    # -=- доходов
     def sumIncomeByDays(self, dateBegin, dateEnd):  # 1.04 - 4.04
-        res = self.cur.execute("""SELECT (incDate, sum(cash) as sumCash) 
+        res = self.cur.execute("""SELECT incDate, sum(cash) as sumCash 
         FROM income 
         WHERE (incDate >= ? AND incDate <= ?) 
         GROUP BY incDate
         ORDER BY incDate ASC""", (dateBegin, dateEnd))
         self.con.commit()
         return res
+
 
     # сумма по каждой из категорий за временной промежуток, вывод по убыванию суммы
     def sumExpenseByCateg(self, dateBegin, dateEnd):  #############

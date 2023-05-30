@@ -28,9 +28,13 @@ class Application:
         self.graph_frame = Frame(self.main_window, background='#FFFFFF')
         self.graph_frame.grid(row=0, column=0, sticky="nsew")
 
-        self.bottom_frame = Frame(self.main_window, background="#f3dd9a")
+        self.bottom_frame = Frame(self.main_window, background="#FFFFFF")
         self.bottom_frame.grid(row=1, column=0, sticky="nsew")
 
+        self.sizePic = (520, 250)
+        self.iPicture = 0
+        self.plus = 0
+        self.minus = 0
         self.length = None
         self.executed = True
         self.figure = None
@@ -51,12 +55,7 @@ class Application:
 
         self.plus_input = None
         self.minus_input = None
-        # conn.addExpCat('Все')
         self.categories = [x['name'] for x in conn.selectExpCat()]
-        # conn.deleteAllRecords()
-
-        # self.categories.insert(0, 'Все')
-        # выгрузить категории из бд
 
         self.current_category = StringVar()
         if len(self.categories) == 0:
@@ -66,45 +65,43 @@ class Application:
 
         self.current_date = datetime.datetime.today()
 
-        for i in range(4):
-            self.bottom_frame.rowconfigure(i, weight=1)
-        for i in range(6):
-            self.bottom_frame.columnconfigure(i, weight=1)
-
     # дизайн нижней части окна
     def RenderBottom(self):
-        Button(self.bottom_frame, text="Выбрать дату", command=self.OpenCalendar).place(relx=0.46, rely=0.2)
-        Button(self.bottom_frame, text="<---", command=lambda: self.ChangeCurDate(days=-1)).place(relx=0.42, rely=0.1)
-        Label(self.bottom_frame, text=self.current_date.strftime("%d %B %Y"), background='#f3dd9a').place(relx=0.465, rely=0.11)
-        Button(self.bottom_frame, text="--->", command=lambda: self.ChangeCurDate(days=1)).place(relx=0.53, rely=0.1)
+        Button(self.bottom_frame, text="Выбрать дату", background='#f3dd9a',
+               command=self.OpenCalendar).place(relx=0.265, rely=0.05)
+        Button(self.bottom_frame, text="<---", background='#f3dd9a',
+               command=lambda: self.ChangeCurDate(days=-1)).place(relx=0.22, rely=0.2)
+        Label(self.bottom_frame, text=self.current_date.strftime("%d %B %Y")).place(relx=0.27, rely=0.21)
+        Button(self.bottom_frame, text="--->", background='#f3dd9a',
+               command=lambda: self.ChangeCurDate(days=1)).place(relx=0.35, rely=0.2)
 
-        Label(self.bottom_frame, textvariable=self.current_category, background='#f3dd9a').place(relx=0.2, rely=0.11)
-        Button(self.bottom_frame, text="Сменить категорию", command=self.OpenCategoriesWindow).place(relx=0.1, rely=0.1)
+        Label(self.bottom_frame, font=50, textvariable=self.current_category).place(relx=0.15, rely=0.8)
+        Button(self.bottom_frame, text="Сменить категорию", background='#f3dd9a',
+               command=self.OpenCategoriesWindow).place(relx=0.02, rely=0.8)
 
-<<<<<<< HEAD
-        Label(self.bottom_frame, text="Доход", background='#f3dd9a').place(relx=0.32, rely=0.45)
-        Label(self.bottom_frame, text="Расход", background='#f3dd9a').place(relx=0.62, rely=0.45)
-=======
-        Label(self.bottom_frame, text="Доход", background='#DAFDBA').place(relx=0.32, rely=0.45)
-        Label(self.bottom_frame, text="Расход", background='#DAFDBA').place(relx=0.62, rely=0.45)
-        Button(self.bottom_frame, text="Ок", command=lambda: self.OnValueChanged()).place(relx=0.47, rely=0.55)
->>>>>>> 41e352e16d9557937ae70a923f945f307141a11e
+        Label(self.bottom_frame, font=50, text="Доход").place(relx=0.18, rely=0.4)
+        Label(self.bottom_frame, font=50, text="Расход").place(relx=0.38, rely=0.4)
+        Button(self.bottom_frame, text="Ок", background='#f3dd9a', font=50,
+               command=lambda: self.OnValueChanged()).place(relx=0.29, rely=0.48)
+
+        Button(self.bottom_frame, text="<", background='#f3dd9a', font=50,
+               command=lambda: self.image_switcher(-1)).place(relx=0.75, rely=0.01)
+        Button(self.bottom_frame, text=">", background='#f3dd9a', font=50,
+               command=lambda: self.image_switcher(1)).place(relx=0.85, rely=0.01)
 
         plus_sv = StringVar()
-        self.plus_input = Entry(self.bottom_frame, textvariable=plus_sv)
-        self.plus_input.place(relx=0.3, rely=0.55)
-        # plus_sv.trace("w", lambda name, index, mode, sv=plus_sv: self.OnValueChanged())
+        self.plus_input = Entry(self.bottom_frame, background='#f3dd9a', textvariable=plus_sv)
+        self.plus_input.place(relx=0.15, rely=0.5)
 
         minus_sv = StringVar()
-        self.minus_input = Entry(self.bottom_frame, textvariable=minus_sv)
-        self.minus_input.place(relx=0.6, rely=0.55)
-        # minus_sv.trace("w", lambda name, index, mode, sv=minus_sv: self.OnValueChanged())
+        self.minus_input = Entry(self.bottom_frame, background='#f3dd9a', textvariable=minus_sv)
+        self.minus_input.place(relx=0.35, rely=0.5)
 
         def clear_entry(event):
             event.widget.delete(0, 'end')
 
-        # self.plus_input.bind('<FocusOut>', clear_entry)
-        # self.minus_input.bind('<FocusOut>', clear_entry)
+        self.plus_input.bind('<FocusOut>', clear_entry)
+        self.minus_input.bind('<FocusOut>', clear_entry)
 
     def OpenCategoriesWindow(self):
         # выгрузка категорий из бд - сделать функцию
@@ -112,7 +109,6 @@ class Application:
         global categories_frame
         global categories_canvas
         self.categories_window = Toplevel()
-        # self.categories_window.grab_set()
         self.categories_window.title("Выбор категории")
         self.categories_window.geometry("300x300")
         self.categories_window.resizable(False, False)
@@ -127,8 +123,10 @@ class Application:
 
         Button(categories_frame, text="+", command=self.OpenAddCategoryWindow).grid()
         for i in range(len(self.categories)):
-            Button(categories_frame, text=self.categories[i], command=lambda x=self.categories[i]: self.ChangeCategory(x)).grid(row=i+1, column=0)
-            Button(categories_frame, text="-", command=lambda x=self.categories[i]: self.ChangeCategory(x)).grid(row=i+1, column = 1)
+            Button(categories_frame, text=self.categories[i],
+                   command=lambda x=self.categories[i]: self.ChangeCategory(x)).grid(row=i + 1, column=0)
+            Button(categories_frame, text="-", command=lambda x=self.categories[i]: self.ChangeCategory(x)).grid(
+                row=i + 1, column=1)
         # for category in self.categories:
         #     Button(categories_frame, text=category, command=lambda x=category: self.ChangeCategory(x)).grid(row=1)
         #     Button(categories_frame, text="-", command=lambda x=category: self.ChangeCategory(x)).grid(row=1)
@@ -165,8 +163,9 @@ class Application:
         #
         conn.addExpCat(category)  # expense
         #
-        Button(categories_frame, text=category, command=lambda x=category: self.ChangeCategory(x)).grid(row=len(self.categories), column= 0)
-        Button(categories_frame, text="-").grid(row=len(self.categories), column= 1)
+        Button(categories_frame, text=category, command=lambda x=category: self.ChangeCategory(x)).grid(
+            row=len(self.categories), column=0)
+        Button(categories_frame, text="-").grid(row=len(self.categories), column=1)
         categories_canvas.update_idletasks()
         categories_canvas.configure(scrollregion=categories_canvas.bbox("all"))
         self.add_categoty_window.destroy()
@@ -191,47 +190,46 @@ class Application:
     def SelectDate(self):
         global current_date
         global calendar_window
-        #
-        # self.SaveRecord()
-        #
         self.current_date = datetime.datetime.strptime(self.calendar.get_date(), '%m/%d/%y')  # дата измен
+        self.CurDateInRange(self.current_date)
         self.calendar_window.destroy()
         self.selected_button(self.selected_period)
-        # [done]запись в БД прошлого дня, если ячейки пустые null?
         self.RenderBottom()
 
-    def SaveRecord(self, plus, minus):
+    def CurDateInRange(self, changed_date):
+        if changed_date.strftime("%Y-%m-%d") not in self.daysCashDict:  # попадает в промежуток
+            self.tmp = True  # заново выгрузить из бд - очистить словарь daysCashDict мб Event
+
+    def SaveRecord(self):
         _expId = conn.findExpCatId(self.current_category.get())
-        conn.addExpense(_expId, self.current_date.strftime("%Y-%m-%d"), minus)  # self.minus_input.get())
-        conn.addIncome(_expId, self.current_date.strftime("%Y-%m-%d"), plus)   # self.plus_input.get())  # +incomecat
+        if self.minus != 0:
+            conn.addExpense(_expId, self.current_date.strftime("%Y-%m-%d"), self.minus)
+        if self.plus != 0:
+            conn.addIncome(_expId, self.current_date.strftime("%Y-%m-%d"), self.plus)
 
     def ChangeCurDate(self, days=0):
         global current_date
-        #
-        # self.SaveRecord()
-        #
         self.current_date += datetime.timedelta(days=days)
+        self.CurDateInRange(self.current_date)
         self.selected_button(self.selected_period)
-
         self.RenderBottom()
 
     def OnValueChanged(self):
-        value, plus, minus = 0, 0, 0
+        value, self.plus, self.minus = 0, 0, 0
+
         try:
-            plus += int(self.plus_input.get())  # пришел доход
-            print("plus =", plus)
+            self.plus += int(self.plus_input.get())  # пришел доход
         except ValueError:
             pass
 
         try:
-            minus -= int(self.minus_input.get())  # пришел расход
-            print("value =", minus)
+            self.minus -= int(self.minus_input.get())  # пришел расход
         except ValueError:
             pass
 
-        self.SaveRecord(plus, minus)
+        self.SaveRecord()
 
-        value += plus + minus
+        value += self.plus + self.minus
 
         if (self.current_date.strftime("%Y-%m-%d") in self.daysCashDict.keys()):
             self.daysCashDict[self.current_date.strftime("%Y-%m-%d")] += value
@@ -259,14 +257,12 @@ class Application:
         maxMarks = 0
 
         if selected_period == 0:  # week
-
             # количество меток для недели
             maxMarks = 7
 
             # Начинаем с понедельника
             self.start = self.current_date - datetime.timedelta(days=self.current_date.weekday())
             self.timeLine = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-
         elif selected_period == 1:  # month
             # количество меток для месяца
             maxMarks = monthrange(self.current_date.year, self.current_date.month)[1]
@@ -275,28 +271,35 @@ class Application:
             self.start = datetime.datetime(self.current_date.year, self.current_date.month, 1)
             self.timeLine = [str(i + 1) for i in range(maxMarks)]
 
-        # вынесение из БД значений за неделю
+        # вынесение из БД значений
         if self.tmp:
-            # запрос данных БД за неделю
-            tempCursor = conn.sumExpenseByDays(self.start.strftime("%Y-%m-%d"),
-                                               (self.start + datetime.timedelta(days=maxMarks)).strftime(
-                                                   "%Y-%m-%d"))
+            self.daysCashDict.clear()
+            # ссылка на данные по расходам
+            tempExpCur = conn.sumExpenseByDays(self.start.strftime("%Y-%m-%d"),
+                                               (self.start + datetime.timedelta(days=maxMarks)).strftime("%Y-%m-%d"))
+            self.daysCashDict = dict((day, cash) for day, cash in tempExpCur.fetchall())  # сформировали словарь
+            tempIncCur = conn.sumIncomeByDays(self.start.strftime("%Y-%m-%d"),
+                                              (self.start + datetime.timedelta(days=maxMarks)).strftime("%Y-%m-%d"))
+
             # занести словарем key-value
-            self.daysCashDict = dict((day, cash) for day, cash in tempCursor.fetchall())
+            for day, cash in tempIncCur.fetchall():
+                if day in self.daysCashDict:
+                    self.daysCashDict[day] += cash  # прибавили по ключам доход
+                else:
+                    self.daysCashDict[day] = cash
+            # для единоразовой выгрузки за период
             self.tmp = False
 
-        # проинициализировать нулями пустые значения
+        # проинициализировать нулями пустые ячейки
         for iDay in range(maxMarks):
             keyDict = (self.start + datetime.timedelta(days=iDay)).strftime("%Y-%m-%d")
             if keyDict not in self.daysCashDict:
                 self.daysCashDict[keyDict] = 0
 
-
-
         # вынести из словаря БД значения в обычный массив за каждый день
         for i in range(maxMarks):
             self.priceLine = mp.np.append(self.priceLine, self.daysCashDict.get(
-                                              (self.start + datetime.timedelta(days=i)).strftime("%Y-%m-%d"), 0))
+                (self.start + datetime.timedelta(days=i)).strftime("%Y-%m-%d"), 0))
 
         print("priceLine =", self.priceLine, '\n')
         print(len(self.daysCashDict))
@@ -314,7 +317,8 @@ class Application:
         p = mp.np.poly1d(z)
 
         # построить графики
-        self.ax.plot(self.timeLine, self.priceLine, label=self.current_category.get(), color="#45C4B0", marker=".", linestyle="-")
+        self.ax.plot(self.timeLine, self.priceLine, label=self.current_category.get(), color="#45C4B0", marker=".",
+                     linestyle="-")
         self.ax.plot(self.timeLine, p(self.length), label='trend line', color="y", linestyle=":")
         self.ax.legend(loc='lower center')
 
@@ -335,19 +339,35 @@ class Application:
         self.help_bot.on_clicked(lambda x: self.open_image())
         self.help_bot.hovercolor = "grey"
 
-        # Button(self.bottom_frame, text="?", command=lambda: self.open_image1).place(x=0, y=0)
+        self.image_switcher(0)
 
         self.selected_button(self.selected_period)
 
     def open_image(self):
-        image = Image.open("22.jpg")
-        image = image.resize((500, 290))
+        image = Image.open("graph.jpg")
+        image = image.resize(self.sizePic)
         image = ImageTk.PhotoImage(image)
 
         label = Label(self.main_window, image=image)
         label.image_names = image
         label.place(relx=1.0, rely=1.0, anchor='se')
         label.bind("<Button-1>", lambda event: label.destroy())
+
+    def image_switcher(self, iPic):
+        info_images = ["1.jpg", "2.jpg", "3.jpg", "4.jpg", "5.jpg", "6.jpg", "7.jpg", "8.jpg", "9.jpg", "10.jpg"]
+
+        self.iPicture += iPic
+        if self.iPicture == len(info_images):
+            self.iPicture = 0
+        elif self.iPicture == -1:
+            self.iPicture = len(info_images)-1
+
+        curImage = Image.open(info_images[self.iPicture])
+        curImage = curImage.resize(self.sizePic)
+        curImage = ImageTk.PhotoImage(curImage)
+        label = Label(self.main_window, image=curImage)
+        label.image_names = curImage
+        label.place(relx=1.0, rely=1.0, anchor='se')
 
 
 apl = Application()
