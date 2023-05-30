@@ -1,4 +1,3 @@
-# -*- coding: UTF-8 -*-
 import os
 import datetime
 import matplotlib.pyplot as mp
@@ -136,8 +135,11 @@ class Application:
 
     def ChangeCategory(self, category):
         global categories_window
-        self.tmp = True
+        # self.tmp = True
         self.current_category.set(category)
+        #
+        self.tmp = True #прогрузить для другой категории
+        #
         self.RenderBottom()
         self.categories_window.destroy()
         self.selected_button(self.selected_period)
@@ -190,17 +192,22 @@ class Application:
     def SelectDate(self):
         global current_date
         global calendar_window
+        #
+        # self.SaveRecord()
+        #
         self.current_date = datetime.datetime.strptime(self.calendar.get_date(), '%m/%d/%y')  # дата измен
         self.CurDateInRange(self.current_date)
         self.calendar_window.destroy()
         self.selected_button(self.selected_period)
+        # [done]запись в БД прошлого дня, если ячейки пустые null?
         self.RenderBottom()
 
     def CurDateInRange(self, changed_date):
-        if changed_date.strftime("%Y-%m-%d") not in self.daysCashDict:  # попадает в промежуток
-            self.tmp = True  # заново выгрузить из бд - очистить словарь daysCashDict мб Event
+        if changed_date.strftime("%Y-%m-%d") not in self.daysCashDict: #попадает в промежуток
+            self.tmp = True #заново выгрузить из бд - очистить словарь daysCashDict мб Event
 
     def SaveRecord(self):
+
         _expId = conn.findExpCatId(self.current_category.get())
         if self.minus != 0:
             conn.addExpense(_expId, self.current_date.strftime("%Y-%m-%d"), self.minus)
@@ -209,14 +216,18 @@ class Application:
 
     def ChangeCurDate(self, days=0):
         global current_date
+        #
+        # self.SaveRecord()
+        #
         self.current_date += datetime.timedelta(days=days)
         self.CurDateInRange(self.current_date)
+        #
         self.selected_button(self.selected_period)
+
         self.RenderBottom()
 
     def OnValueChanged(self):
         value, self.plus, self.minus = 0, 0, 0
-
         try:
             self.plus += int(self.plus_input.get())  # пришел доход
         except ValueError:
@@ -236,16 +247,18 @@ class Application:
 
         self.plus_input.delete(0, END)
         self.minus_input.delete(0, END)
+
         self.selected_button(self.selected_period)
 
     def selected_button(self, label):
-        i_dict = {
-            "week": 0,
-            "month": 1
-        }
-        i = i_dict.get(label, 0)
-        self.selected_period = i
-        self.render_lines(i)
+        if label == "week":
+            self.selected_period = 0
+        elif label == "month":
+            self.selected_period = 1
+        #
+        self.tmp = True
+        #
+        self.render_lines(self.selected_period)
         self.canvas.draw()
 
     def render_lines(self, selected_period):
@@ -254,56 +267,55 @@ class Application:
         self.priceLine = []
         self.timeLine = []
         self.length = []
-        maxMarks = 0
+        maxMarks, iDay = 0, 0
+        # self.last_selected_period
 
         if selected_period == 0:  # week
             # количество меток для недели
             maxMarks = 7
-
             # Начинаем с понедельника
             self.start = self.current_date - datetime.timedelta(days=self.current_date.weekday())
             self.timeLine = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
         elif selected_period == 1:  # month
+            self.tmp = True
             # количество меток для месяца
             maxMarks = monthrange(self.current_date.year, self.current_date.month)[1]
 
             # Начинаем с 1 числа
             self.start = datetime.datetime(self.current_date.year, self.current_date.month, 1)
             self.timeLine = [str(i + 1) for i in range(maxMarks)]
+        # conn.deleteAllRecords()
 
         # вынесение из БД значений
         if self.tmp:
-            self.daysCashDict.clear()
-            # ссылка на данные по расходам
-            tempExpCur = conn.sumExpenseByDays(self.start.strftime("%Y-%m-%d"),
-                                               (self.start + datetime.timedelta(days=maxMarks)).strftime("%Y-%m-%d"))
-            self.daysCashDict = dict((day, cash) for day, cash in tempExpCur.fetchall())  # сформировали словарь
-            tempIncCur = conn.sumIncomeByDays(self.start.strftime("%Y-%m-%d"),
-                                              (self.start + datetime.timedelta(days=maxMarks)).strftime("%Y-%m-%d"))
+            _expId = conn.findExpCatId(self.current_category.get())
+            tempExpCur = conn.sumExpCatByDays(self.start.strftime("%Y-%m-%d"),
+                                              (self.start + datetime.timedelta(days=maxMarks-1)).strftime("%Y-%m-%d"),
+                                              _expId)
+            self.daysCashDict = dict((day, cash) for (day, cash, idCat) in tempExpCur.fetchall())
+            tempIncCur = conn.sumIncCatByDays(self.start.strftime("%Y-%m-%d"),
+                                              (self.start + datetime.timedelta(days=maxMarks-1)).strftime("%Y-%m-%d"),
+                                              _expId)
 
             # занести словарем key-value
-            for day, cash in tempIncCur.fetchall():
+            for (day, cash, idCat) in tempIncCur.fetchall():
                 if day in self.daysCashDict:
                     self.daysCashDict[day] += cash  # прибавили по ключам доход
                 else:
                     self.daysCashDict[day] = cash
-            # для единоразовой выгрузки за период
+            # для единоразовой выгрузки, иначе
+            # проинициализировать нулями пустые значения
+            for iDay in range(maxMarks):
+                keyDict = (self.start + datetime.timedelta(days=iDay)).strftime("%Y-%m-%d")
+                if keyDict not in self.daysCashDict:
+                    self.daysCashDict[keyDict] = 0
             self.tmp = False
-
-        # проинициализировать нулями пустые ячейки
-        for iDay in range(maxMarks):
-            keyDict = (self.start + datetime.timedelta(days=iDay)).strftime("%Y-%m-%d")
-            if keyDict not in self.daysCashDict:
-                self.daysCashDict[keyDict] = 0
 
         # вынести из словаря БД значения в обычный массив за каждый день
         for i in range(maxMarks):
             self.priceLine = mp.np.append(self.priceLine, self.daysCashDict.get(
                 (self.start + datetime.timedelta(days=i)).strftime("%Y-%m-%d"), 0))
-
-        print("priceLine =", self.priceLine, '\n')
-        print(len(self.daysCashDict))
-        print(len(self.timeLine))
 
         # по оси y установить ограничение в 15 значений
         self.ax.yaxis.set_major_locator(mp.MaxNLocator(maxMarks))

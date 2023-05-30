@@ -58,11 +58,13 @@ class SQLDataBase:
 
     # - расх/дох катег
     def delExpCat(self, exp_id):
-        self.cur.execute("DELETE FROM expenseCat WHERE exp_id == ?", [exp_id])
+        self.cur.execute("DELETE FROM expenseCat WHERE id == ?", [exp_id])
+        self.cur.execute("DELETE FROM expense WHERE exp_id == ?", [exp_id])
         self.con.commit()
 
     def delIncCat(self, inc_id):
-        self.cur.execute("DELETE FROM incomeCat WHERE inc_id == ?", [inc_id])
+        self.cur.execute("DELETE FROM incomeCat WHERE id == ?", [inc_id])
+        self.cur.execute("DELETE FROM income WHERE inc_id == ?", [inc_id])
         self.con.commit()
 
     # для графика -- сумма трат по дням без учета категорий за период времени, словарь -- результир данные, отсорт по возраст даты
@@ -74,6 +76,7 @@ class SQLDataBase:
         ORDER BY expDate ASC""", (dateBegin, dateEnd))
         self.con.commit()
         return res
+    #для всех категорий
 
     def sumIncomeByDays(self, dateBegin, dateEnd):  # 1.04 - 4.04
         res = self.cur.execute("""SELECT incDate, sum(cash) as sumCash 
@@ -92,18 +95,43 @@ class SQLDataBase:
         WHERE (expDate >= ? AND expDate <= ?)
         GROUP BY exp_id
         ORDER BY sumCash DESC""", (dateBegin, dateEnd))
+    def sumExpCatByDays(self, dateBegin, dateEnd, exp_id): #категория {день:сумма} -траты
+        res = self.cur.execute("""SELECT expDate, SUM(cash) AS sumCash, exp_id
+        FROM expense 
+        WHERE (exp_id == ? AND expDate >= ? AND expDate <= ?) 
+        GROUP BY expDate, exp_id
+        ORDER BY expDate ASC""", (exp_id, dateBegin, dateEnd))
         self.con.commit()
         return res
 
-    def sumIncomeByCateg(self, dateBegin, dateEnd):
-        res = self.cur.execute("""SELECT inc_id, sum(cash)
+    def sumIncCatByDays(self, dateBegin, dateEnd, inc_id): #категория {день:сумма} - доходы
+        res = self.cur.execute("""SELECT incDate, SUM(cash) AS sumCash, inc_id
         FROM income
-        WHERE (incDate >= ? AND incDate <= ?) 
-        GROUP BY inc_id
-        ORDER BY sum(cash) DESC""", (dateBegin, dateEnd))
+        WHERE (inc_id == ? AND incDate >= ? AND incDate <= ?) 
+        GROUP BY incDate, inc_id
+        ORDER BY incDate ASC""", (inc_id, dateBegin, dateEnd))
         self.con.commit()
         return res
 
+    # сумма по каждой из категорий за временной промежуток, вывод по убыванию суммы
+    #def sumExpenseByCateg(self, dateBegin, dateEnd):  #############
+    #    res = self.cur.execute("""SELECT exp_id, SUM(cash) AS sumCash
+    #    FROM expense
+    #    WHERE (expDate >= ? AND expDate <= ?)
+    #    GROUP BY exp_id
+    #    ORDER BY sumCash DESC""", (dateBegin, dateEnd))
+    #    self.con.commit()
+    #    return res
+
+    #def sumIncomeByCateg(self, dateBegin, dateEnd):
+    #    res = self.cur.execute("""SELECT inc_id, sum(cash) as sumCash
+    #    FROM income
+    #    WHERE (incDate >= ? AND incDate <= ?)
+    #    GROUP BY inc_id
+    #    ORDER BY sumCash DESC""", (dateBegin, dateEnd))
+    #    self.con.commit()
+    #    return res
+    #круговой диаграммы нет
     def findExpCatId(self, catName):  # найти по имени id категории
         numRec = self.cur.execute("""SELECT id FROM expenseCat WHERE name == ?""", [str(catName)])
         return numRec.fetchone()[0]
