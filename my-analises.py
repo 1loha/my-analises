@@ -254,9 +254,6 @@ class Application:
 
             # Начинаем с понедельника
             self.start = self.current_date - datetime.timedelta(days=self.current_date.weekday())
-
-
-
             self.timeLine = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
         elif selected_period == 1:  # month
