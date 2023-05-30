@@ -81,24 +81,30 @@ class Application:
         Label(self.bottom_frame, textvariable=self.current_category, background='#f3dd9a').place(relx=0.2, rely=0.11)
         Button(self.bottom_frame, text="Сменить категорию", command=self.OpenCategoriesWindow).place(relx=0.1, rely=0.1)
 
+<<<<<<< HEAD
         Label(self.bottom_frame, text="Доход", background='#f3dd9a').place(relx=0.32, rely=0.45)
         Label(self.bottom_frame, text="Расход", background='#f3dd9a').place(relx=0.62, rely=0.45)
+=======
+        Label(self.bottom_frame, text="Доход", background='#DAFDBA').place(relx=0.32, rely=0.45)
+        Label(self.bottom_frame, text="Расход", background='#DAFDBA').place(relx=0.62, rely=0.45)
+        Button(self.bottom_frame, text="Ок", command=lambda: self.OnValueChanged()).place(relx=0.47, rely=0.55)
+>>>>>>> 41e352e16d9557937ae70a923f945f307141a11e
 
         plus_sv = StringVar()
         self.plus_input = Entry(self.bottom_frame, textvariable=plus_sv)
         self.plus_input.place(relx=0.3, rely=0.55)
-        plus_sv.trace("w", lambda name, index, mode, sv=plus_sv: self.OnValueChanged())
+        # plus_sv.trace("w", lambda name, index, mode, sv=plus_sv: self.OnValueChanged())
 
         minus_sv = StringVar()
         self.minus_input = Entry(self.bottom_frame, textvariable=minus_sv)
         self.minus_input.place(relx=0.6, rely=0.55)
-        minus_sv.trace("w", lambda name, index, mode, sv=minus_sv: self.OnValueChanged())
+        # minus_sv.trace("w", lambda name, index, mode, sv=minus_sv: self.OnValueChanged())
 
         def clear_entry(event):
             event.widget.delete(0, 'end')
 
-        self.plus_input.bind('<FocusOut>', clear_entry)
-        self.minus_input.bind('<FocusOut>', clear_entry)
+        # self.plus_input.bind('<FocusOut>', clear_entry)
+        # self.minus_input.bind('<FocusOut>', clear_entry)
 
     def OpenCategoriesWindow(self):
         # выгрузка категорий из бд - сделать функцию
@@ -119,10 +125,13 @@ class Application:
         categories_canvas.pack(side="left", fill="both", expand=True)
         categories_canvas.create_window((4, 4), window=categories_frame, anchor="nw")
 
-        Button(categories_frame, text="+", command=self.OpenAddCategoryWindow).pack(pady=10)
-        for category in self.categories:
-            Button(categories_frame, text=category, command=lambda x=category: self.ChangeCategory(x)).pack(
-                pady=10, padx=100)
+        Button(categories_frame, text="+", command=self.OpenAddCategoryWindow).grid()
+        for i in range(len(self.categories)):
+            Button(categories_frame, text=self.categories[i], command=lambda x=self.categories[i]: self.ChangeCategory(x)).grid(row=i+1, column=0)
+            Button(categories_frame, text="-", command=lambda x=self.categories[i]: self.ChangeCategory(x)).grid(row=i+1, column = 1)
+        # for category in self.categories:
+        #     Button(categories_frame, text=category, command=lambda x=category: self.ChangeCategory(x)).grid(row=1)
+        #     Button(categories_frame, text="-", command=lambda x=category: self.ChangeCategory(x)).grid(row=1)
 
         categories_canvas.update_idletasks()
         categories_canvas.configure(scrollregion=categories_canvas.bbox("all"))
@@ -156,8 +165,8 @@ class Application:
         #
         conn.addExpCat(category)  # expense
         #
-        Button(categories_frame, text=category, command=lambda x=category: self.ChangeCategory(x)).pack(
-            pady=10, padx=100)
+        Button(categories_frame, text=category, command=lambda x=category: self.ChangeCategory(x)).grid(row=len(self.categories), column= 0)
+        Button(categories_frame, text="-").grid(row=len(self.categories), column= 1)
         categories_canvas.update_idletasks()
         categories_canvas.configure(scrollregion=categories_canvas.bbox("all"))
         self.add_categoty_window.destroy()
@@ -185,7 +194,7 @@ class Application:
         #
         # self.SaveRecord()
         #
-        self.current_date = datetime.datetime.strptime(self.calendar.get_date(), '%Y-%m-%d')  # дата измен
+        self.current_date = datetime.datetime.strptime(self.calendar.get_date(), '%m/%d/%y')  # дата измен
         self.calendar_window.destroy()
         self.selected_button(self.selected_period)
         # [done]запись в БД прошлого дня, если ячейки пустые null?
@@ -227,6 +236,8 @@ class Application:
         if (self.current_date.strftime("%Y-%m-%d") in self.daysCashDict.keys()):
             self.daysCashDict[self.current_date.strftime("%Y-%m-%d")] += value
 
+        self.plus_input.delete(0, END)
+        self.minus_input.delete(0, END)
         self.selected_button(self.selected_period)
 
     def selected_button(self, label):
