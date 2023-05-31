@@ -145,6 +145,9 @@ class SQLDataBase:
         self.cur.execute("""DELETE FROM income""")
         self.con.commit()
 
+    # def deleteCateg(self, catName):
+    #     self.cur.execute("""DELETE name FROM expenseCat WHERE name == ?""", [str(self.findExpCatId(catName))])
+
     # возм. методы
     # удалить все записи
     # удаление категории -> удаление с ней записей

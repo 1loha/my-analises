@@ -124,7 +124,7 @@ class Application:
         for i in range(len(self.categories)):
             Button(categories_frame, text=self.categories[i],
                    command=lambda x=self.categories[i]: self.ChangeCategory(x)).grid(row=i + 1, column=0)
-            Button(categories_frame, text="-", command=lambda x=self.categories[i]: self.ChangeCategory(x)).grid(
+            Button(categories_frame, text="-", command=lambda x=i: self.DeleteCategory(x)).grid(
                 row=i + 1, column=1)
         # for category in self.categories:
         #     Button(categories_frame, text=category, command=lambda x=category: self.ChangeCategory(x)).grid(row=1)
@@ -138,11 +138,22 @@ class Application:
         # self.tmp = True
         self.current_category.set(category)
         #
-        self.tmp = True #прогрузить для другой категории
+        self.tmp = True  # прогрузить для другой категории
         #
         self.RenderBottom()
         self.categories_window.destroy()
         self.selected_button(self.selected_period)
+
+    def DeleteCategory(self, category_index):
+        if(category_index==0):
+            return
+        catId = conn.findExpCatId(self.categories[category_index])
+        conn.delExpCat(catId)
+        conn.delIncCat(catId)
+        global categories_window
+        self.categories.pop(category_index)
+        self.categories_window.destroy()
+        self.OpenCategoriesWindow()
 
     def OpenAddCategoryWindow(self):
         global add_categoty_window
@@ -167,7 +178,7 @@ class Application:
         #
         Button(categories_frame, text=category, command=lambda x=category: self.ChangeCategory(x)).grid(
             row=len(self.categories), column=0)
-        Button(categories_frame, text="-").grid(row=len(self.categories), column=1)
+        Button(categories_frame, text="-", command=lambda x=len(self.categories)-1: self.DeleteCategory(x)).grid(row=len(self.categories), column=1)
         categories_canvas.update_idletasks()
         categories_canvas.configure(scrollregion=categories_canvas.bbox("all"))
         self.add_categoty_window.destroy()
@@ -203,8 +214,8 @@ class Application:
         self.RenderBottom()
 
     def CurDateInRange(self, changed_date):
-        if changed_date.strftime("%Y-%m-%d") not in self.daysCashDict: #попадает в промежуток
-            self.tmp = True #заново выгрузить из бд - очистить словарь daysCashDict мб Event
+        if changed_date.strftime("%Y-%m-%d") not in self.daysCashDict:  # попадает в промежуток
+            self.tmp = True  # заново выгрузить из бд - очистить словарь daysCashDict мб Event
 
     def SaveRecord(self):
 
@@ -285,17 +296,17 @@ class Application:
             # Начинаем с 1 числа
             self.start = datetime.datetime(self.current_date.year, self.current_date.month, 1)
             self.timeLine = [str(i + 1) for i in range(maxMarks)]
-        # conn.deleteAllRecords()
+        conn.deleteAllRecords()
 
         # вынесение из БД значений
         if self.tmp:
             _expId = conn.findExpCatId(self.current_category.get())
             tempExpCur = conn.sumExpCatByDays(self.start.strftime("%Y-%m-%d"),
-                                              (self.start + datetime.timedelta(days=maxMarks-1)).strftime("%Y-%m-%d"),
+                                              (self.start + datetime.timedelta(days=maxMarks - 1)).strftime("%Y-%m-%d"),
                                               _expId)
             self.daysCashDict = dict((day, cash) for (day, cash, idCat) in tempExpCur.fetchall())
             tempIncCur = conn.sumIncCatByDays(self.start.strftime("%Y-%m-%d"),
-                                              (self.start + datetime.timedelta(days=maxMarks-1)).strftime("%Y-%m-%d"),
+                                              (self.start + datetime.timedelta(days=maxMarks - 1)).strftime("%Y-%m-%d"),
                                               _expId)
 
             # занести словарем key-value
@@ -372,7 +383,7 @@ class Application:
         if self.iPicture == len(info_images):
             self.iPicture = 0
         elif self.iPicture == -1:
-            self.iPicture = len(info_images)-1
+            self.iPicture = len(info_images) - 1
 
         curImage = Image.open(info_images[self.iPicture])
         curImage = curImage.resize(self.sizePic)
