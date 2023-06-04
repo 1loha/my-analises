@@ -138,14 +138,14 @@ class Application:
         # self.tmp = True
         self.current_category.set(category)
         #
-        self.tmp = True  # прогрузить для другой категории
+        self.tmp = True #прогрузить для другой категории
         #
         self.RenderBottom()
         self.categories_window.destroy()
         self.selected_button(self.selected_period)
 
     def DeleteCategory(self, category_index):
-        if(category_index==0):
+        if (category_index == 0):
             return
         catId = conn.findExpCatId(self.categories[category_index])
         conn.delExpCat(catId)
@@ -214,8 +214,8 @@ class Application:
         self.RenderBottom()
 
     def CurDateInRange(self, changed_date):
-        if changed_date.strftime("%Y-%m-%d") not in self.daysCashDict:  # попадает в промежуток
-            self.tmp = True  # заново выгрузить из бд - очистить словарь daysCashDict мб Event
+        if changed_date.strftime("%Y-%m-%d") not in self.daysCashDict: #попадает в промежуток
+            self.tmp = True #заново выгрузить из бд - очистить словарь daysCashDict мб Event
 
     def SaveRecord(self):
 
@@ -296,17 +296,17 @@ class Application:
             # Начинаем с 1 числа
             self.start = datetime.datetime(self.current_date.year, self.current_date.month, 1)
             self.timeLine = [str(i + 1) for i in range(maxMarks)]
-        conn.deleteAllRecords()
+        # conn.deleteAllRecords()
 
         # вынесение из БД значений
         if self.tmp:
             _expId = conn.findExpCatId(self.current_category.get())
             tempExpCur = conn.sumExpCatByDays(self.start.strftime("%Y-%m-%d"),
-                                              (self.start + datetime.timedelta(days=maxMarks - 1)).strftime("%Y-%m-%d"),
+                                              (self.start + datetime.timedelta(days=maxMarks-1)).strftime("%Y-%m-%d"),
                                               _expId)
             self.daysCashDict = dict((day, cash) for (day, cash, idCat) in tempExpCur.fetchall())
             tempIncCur = conn.sumIncCatByDays(self.start.strftime("%Y-%m-%d"),
-                                              (self.start + datetime.timedelta(days=maxMarks - 1)).strftime("%Y-%m-%d"),
+                                              (self.start + datetime.timedelta(days=maxMarks-1)).strftime("%Y-%m-%d"),
                                               _expId)
 
             # занести словарем key-value
@@ -383,7 +383,7 @@ class Application:
         if self.iPicture == len(info_images):
             self.iPicture = 0
         elif self.iPicture == -1:
-            self.iPicture = len(info_images) - 1
+            self.iPicture = len(info_images)-1
 
         curImage = Image.open(info_images[self.iPicture])
         curImage = curImage.resize(self.sizePic)
